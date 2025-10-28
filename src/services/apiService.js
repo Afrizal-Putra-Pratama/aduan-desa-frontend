@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // At top of apiService.js
-const API_BASE_URL = process.env.REACT_APP_API_URL;
-
+const API_BASE_URL = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api';console.log('🔧 API_BASE_URL (HARDCODED):', API_BASE_URL);
+console.log('🔧 API_BASE_URL (HARDCODED):', API_BASE_URL);
 // Add check
 if (!API_BASE_URL) {
   console.error('❌ REACT_APP_API_URL not set!');
