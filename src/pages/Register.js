@@ -5,6 +5,29 @@ import Button from '../components/common/Button';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
+// ✅ MOVE OUTSIDE - FIXED!
+const InputField = ({ label, helperText, icon, ...props }) => (
+  <div>
+    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+      {label} {props.required && <span className="text-red-500">*</span>}
+    </label>
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500">
+        {icon}
+      </div>
+      <input
+        {...props}
+        className="w-full pl-10 pr-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500"
+      />
+    </div>
+    {helperText && (
+      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+        {helperText}
+      </p>
+    )}
+  </div>
+);
+
 function Register() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -58,29 +81,6 @@ function Register() {
       setLoading(false);
     }
   };
-
-  // Custom Input with Helper Text
-  const InputField = ({ label, helperText, icon, ...props }) => (
-    <div>
-      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
-        {label} {props.required && <span className="text-red-500">*</span>}
-      </label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500">
-          {icon}
-        </div>
-        <input
-          {...props}
-          className="w-full pl-10 pr-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500"
-        />
-      </div>
-      {helperText && (
-        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-          {helperText}
-        </p>
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4 py-8 transition-colors">

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost/aduan-desa/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
 
 export const adminAPI = {
   // Login admin
@@ -14,7 +14,8 @@ export const adminAPI = {
         password: password
       }, {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       
@@ -30,17 +31,13 @@ export const adminAPI = {
     }
   },
 
-  // ========================================
-  // GET ALL COMPLAINTS - FIXED URL!
-  // ========================================
+  // GET ALL COMPLAINTS
   getAllComplaints: async (queryParams = '') => {
     console.log('🔵 Getting all complaints (admin) with params:', queryParams);
     const token = localStorage.getItem('admin_token');
     
     const timestamp = new Date().getTime();
     const separator = queryParams ? '&' : '?';
-    
-    // ✅ FIXED: Use correct endpoint
     const url = `${API_BASE_URL}/complaints/admin-list.php${queryParams ? '?' + queryParams : ''}${separator}_t=${timestamp}`;
     
     console.log('📍 Request URL:', url);
@@ -48,14 +45,12 @@ export const adminAPI = {
     try {
       const res = await axios.get(url, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       
       console.log('✅ Complaints loaded:', res.data.count, 'complaints');
-      console.log('📊 Total items:', res.data.total);
-      console.log('📄 Page:', res.data.page, '/', res.data.totalPages);
-      console.log('🔄 Sort:', res.data.sort);
       return res.data;
     } catch (error) {
       console.error('❌ Error getting complaints:', error);
@@ -73,7 +68,8 @@ export const adminAPI = {
         `${API_BASE_URL}/admin/dashboard/stats.php`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           }
         }
       );
@@ -98,7 +94,8 @@ export const adminAPI = {
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           }
         }
       );
@@ -123,7 +120,8 @@ export const adminAPI = {
         {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           }
         }
       );
@@ -136,17 +134,17 @@ export const adminAPI = {
     }
   },
 
-  // ============================================
   // CATEGORY MANAGEMENT
-  // ============================================
-  
   getCategories: async () => {
     console.log('🔵 Getting categories');
     const token = localStorage.getItem('admin_token');
     
     try {
       const res = await axios.get(`${API_BASE_URL}/admin/categories/list.php`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+        }
       });
       console.log('✅ Categories loaded:', res.data);
       return res.data;
@@ -167,7 +165,8 @@ export const adminAPI = {
         { 
           headers: { 
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           } 
         }
       );
@@ -193,7 +192,8 @@ export const adminAPI = {
         { 
           headers: { 
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           } 
         }
       );
@@ -219,7 +219,8 @@ export const adminAPI = {
         { 
           headers: { 
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           } 
         }
       );
@@ -234,10 +235,7 @@ export const adminAPI = {
     }
   },
 
-  // ============================================
   // USER MANAGEMENT
-  // ============================================
-
   getUsers: async (search = '') => {
     console.log('🔵 Getting users, search:', search);
     const token = localStorage.getItem('admin_token');
@@ -248,7 +246,10 @@ export const adminAPI = {
     
     try {
       const res = await axios.get(url, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+        }
       });
       console.log('✅ Users loaded:', res.data.count, 'users');
       return res.data;
@@ -264,7 +265,10 @@ export const adminAPI = {
     
     try {
       const res = await axios.get(`${API_BASE_URL}/admin/users/detail.php?id=${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+        }
       });
       console.log('✅ User detail loaded:', res.data);
       return res.data;
@@ -285,7 +289,8 @@ export const adminAPI = {
         { 
           headers: { 
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           } 
         }
       );
@@ -311,7 +316,8 @@ export const adminAPI = {
         { 
           headers: { 
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
           } 
         }
       );
@@ -326,10 +332,7 @@ export const adminAPI = {
     }
   },
 
-  // ============================================
   // COMPLAINTS PUBLISH
-  // ============================================
-
   togglePublic: async (complaintId, isPublic) => {
     console.log('🔵 Toggling complaint public:', complaintId, isPublic);
     const token = localStorage.getItem('admin_token');
@@ -337,7 +340,13 @@ export const adminAPI = {
       const res = await axios.post(
         `${API_BASE_URL}/admin/toggle-public.php`,
         { complaint_id: complaintId, is_public: isPublic },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { 
+          headers: { 
+            'Authorization': `Bearer ${token}`, 
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          } 
+        }
       );
       return res.data;
     } catch (error) {

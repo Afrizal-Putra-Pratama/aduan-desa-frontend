@@ -6,7 +6,7 @@ import Button from '../../components/common/Button';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import { FiMail, FiLock, FiAlertCircle } from 'react-icons/fi';
 
-// ✅ PINDAHKAN InputField KELUAR DARI COMPONENT
+// ✅ InputField component outside
 const InputField = ({ label, icon, ...props }) => (
   <div>
     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
@@ -78,7 +78,7 @@ function AdminLogin() {
       localStorage.setItem('admin_data', JSON.stringify(response.admin));
       console.log('✅ Login successful');
       
-      // Request FCM Token for Admin
+      // ✅ FIXED: Request FCM Token with error handling
       setTimeout(async () => {
         try {
           console.log('🔔 Requesting admin notification permission...');
@@ -88,8 +88,11 @@ function AdminLogin() {
           if (fcmToken) {
             console.log('🔑 Admin FCM Token received:', fcmToken.substring(0, 30) + '...');
             
+            // ✅ FIXED: Use API_URL from environment
+            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+            
             // Save to backend
-            const saveResponse = await fetch('http://localhost/aduan-desa/api/admin/save-fcm-token.php', {
+            const saveResponse = await fetch(`${API_URL}/admin/save-fcm-token.php`, {
               method: 'POST',
               headers: {
                 'Authorization': 'Bearer ' + response.token,
@@ -106,10 +109,12 @@ function AdminLogin() {
               console.error('❌ Failed to save admin FCM token:', saveResult.message);
             }
           } else {
-            console.log('⚠️ Admin did not grant notification permission');
+            // ✅ FIXED: Handle case when FCM not available (HTTP/non-HTTPS)
+            console.log('ℹ️ FCM not available - requires HTTPS or localhost');
           }
         } catch (error) {
-          console.error('❌ Error requesting admin notification:', error);
+          // ✅ FIXED: Non-critical error, don't block login
+          console.warn('⚠️ Error requesting admin notification (non-critical):', error.message);
         }
       }, 1000);
       
@@ -221,7 +226,7 @@ function AdminLogin() {
                     Izinkan Notifikasi
                   </p>
                   <p className="text-xs text-blue-700 dark:text-blue-300">
-                    Untuk menerima alert pengaduan baru secara real-time
+                    Untuk menerima alert pengaduan baru secara real-time (memerlukan HTTPS)
                   </p>
                 </div>
               </div>

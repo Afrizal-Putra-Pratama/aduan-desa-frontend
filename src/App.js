@@ -48,6 +48,7 @@ function AdminProtectedRoute({ children }) {
 }
 
 function App() {
+  
   return (
     <ThemeProvider>
     <Router>

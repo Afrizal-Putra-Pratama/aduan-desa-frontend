@@ -1,60 +1,94 @@
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
-// Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyDMGA59mtHIuvM8E23XyWRXn74POksLaQE",
-  authDomain: "skripsi-fcm.firebaseapp.com",
-  projectId: "skripsi-fcm",
-  storageBucket: "skripsi-fcm.firebasestorage.app",
-  messagingSenderId: "65611754893",
-  appId: "1:65611754893:web:d0f53b8b7d2196327061c4",
-  measurementId: "G-LLZCBLEXMQ"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
-
-// VAPID Key
-const VAPID_KEY = "BFaYxPRPFkrSj_vVTky9KFqZzv7_20AqJqxc_tk6ciFwxEcGsjIMKf_VKp-6TLPLZxZJjnDBstfAAfZLYTAb1Hw";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
 
-// Request Notification Permission
+// Initialize Messaging conditionally
+let messaging = null;
+
+// ✅ CHECK IF MESSAGING IS SUPPORTED
+const initMessaging = async () => {
+  try {
+    // Check if running on HTTPS or localhost
+    const isLocalHost = window.location.hostname === 'localhost';
+    const isHttps = window.location.protocol === 'https:';
+    
+    if (!isLocalHost && !isHttps) {
+      console.warn('⚠️ Firebase Messaging requires HTTPS. Skipping initialization.');
+      return null;
+    }
+    
+    const supported = await isSupported();
+    if (supported) {
+      messaging = getMessaging(app);
+      console.log('✅ Firebase Messaging initialized');
+      return messaging;
+    } else {
+      console.warn('⚠️ Firebase Messaging not supported in this browser');
+      return null;
+    }
+  } catch (error) {
+    console.warn('⚠️ Firebase Messaging initialization skipped:', error.message);
+    return null;
+  }
+};
+
+// Request notification permission
 export const requestNotificationPermission = async () => {
   try {
+    if (!messaging) {
+      await initMessaging();
+    }
+    
+    if (!messaging) {
+      console.log('ℹ️ Notifications not available (requires HTTPS)');
+      return null;
+    }
+
     const permission = await Notification.requestPermission();
     
     if (permission === 'granted') {
       console.log('✅ Notification permission granted');
       
-      const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+      const token = await getToken(messaging, {
+        vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY
+      });
       
-      if (token) {
-        console.log('🔑 FCM Token:', token);
-        return token;
-      } else {
-        console.log('❌ No token available');
-        return null;
-      }
+      console.log('🔑 FCM Token:', token);
+      return token;
     } else {
-      console.log('❌ Notification permission denied');
+      console.log('⚠️ Notification permission denied');
       return null;
     }
   } catch (error) {
-    console.error('Error getting FCM token:', error);
+    console.warn('⚠️ Notification error:', error.message);
     return null;
   }
 };
 
-// Listen for foreground messages
+// Listen for messages
 export const onMessageListener = () =>
   new Promise((resolve) => {
+    if (!messaging) {
+      console.log('ℹ️ Messaging not initialized');
+      return;
+    }
+    
     onMessage(messaging, (payload) => {
-      console.log('📨 Foreground message received:', payload);
+      console.log('📬 Message received:', payload);
       resolve(payload);
     });
   });
 
-// Export for direct use
-export { messaging, getToken, onMessage, VAPID_KEY };
-export default messaging;
+export { app, messaging };

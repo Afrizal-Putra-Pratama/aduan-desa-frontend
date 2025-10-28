@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost/aduan-desa/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
 
 // Helper function untuk request dengan token
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
@@ -19,11 +19,12 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       url: `${API_BASE_URL}/${endpoint}`,
       headers: {
         'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': '69420', // ✅ NGROK BYPASS
       },
       timeout: 10000,
     };
 
-    // ✅ ADD TOKEN TO HEADERS (FIXED!)
+    // ✅ ADD TOKEN TO HEADERS
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       console.log('✅ Token added to headers');
@@ -100,6 +101,7 @@ export const complaintsAPI = {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
+            'ngrok-skip-browser-warning': '69420', // ✅ NGROK BYPASS
           },
           timeout: 30000,
         }
@@ -132,7 +134,8 @@ export const complaintsAPI = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       return await response.json();
@@ -159,7 +162,8 @@ export const notificationsAPI = {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       return await response.json();
@@ -176,7 +180,8 @@ export const notificationsAPI = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         },
         body: JSON.stringify({ notification_id: notificationId })
       });
@@ -194,7 +199,8 @@ export const notificationsAPI = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       return await response.json();
@@ -211,7 +217,8 @@ export const notificationsAPI = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         },
         body: JSON.stringify({ notification_id: notificationId })
       });
@@ -229,7 +236,8 @@ export const notificationsAPI = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
         }
       });
       return await response.json();
@@ -249,7 +257,8 @@ export const updateComplaint = async (id, complaintData) => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
       },
       body: JSON.stringify(complaintData)
     });
@@ -270,7 +279,8 @@ export const deleteComplaint = async (id) => {
     const response = await fetch(`${API_BASE_URL}/complaints/delete.php?id=${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
       }
     });
     
