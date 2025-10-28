@@ -1,7 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+// At top of apiService.js
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
+// Add check
+if (!API_BASE_URL) {
+  console.error('❌ REACT_APP_API_URL not set!');
+  console.error('Using fallback: http://localhost/aduan-desa/api');
+}
+
+console.log('🔧 API_BASE_URL:', API_BASE_URL); // 
 // Helper function untuk request dengan token
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
