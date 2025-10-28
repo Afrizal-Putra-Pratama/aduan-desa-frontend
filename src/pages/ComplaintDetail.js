@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { complaintsAPI, deleteComplaint } from '../services/apiService';
+import { complaintsAPI, deleteComplaint, categoriesAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import StatusBadge from '../components/common/StatusBadge';
 import { FiArrowLeft, FiClock, FiMapPin, FiMessageSquare, FiAlertCircle, FiEdit, FiTrash2, FiImage } from 'react-icons/fi';
@@ -17,7 +17,12 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-const API_BASE_URL = 'http://localhost/aduan-desa/api';
+// ✅ GET API BASE URL FROM ENV
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+const BASE_URL = API_BASE_URL.replace('/api', ''); // For images
+
+console.log('🔧 ComplaintDetail API_BASE_URL:', API_BASE_URL);
+console.log('🔧 ComplaintDetail BASE_URL:', BASE_URL);
 
 function ComplaintDetail() {
   const navigate = useNavigate();
@@ -45,12 +50,12 @@ function ComplaintDetail() {
     setLoading(false);
   };
 
+  // ✅ FIXED: Use apiService instead of hardcoded fetch
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories/list.php`);
-      const data = await response.json();
-      if (data.success) {
-        setCategories(data.data);
+      const response = await categoriesAPI.getList();
+      if (response.success) {
+        setCategories(response.categories || response.data || []);
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -107,6 +112,17 @@ function ComplaintDetail() {
       minute: '2-digit' 
     };
     return new Date(dateString).toLocaleDateString('id-ID', options);
+  };
+
+  // ✅ Helper function for image URLs
+  const getImageURL = (photoPath) => {
+    if (!photoPath) return 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
+    
+    // If already full URL, return as is
+    if (photoPath.startsWith('http')) return photoPath;
+    
+    // Build URL from base
+    return `${BASE_URL}/uploads/complaints/${photoPath}`;
   };
 
   if (loading) {
@@ -274,10 +290,11 @@ function ComplaintDetail() {
               {complaint.photos.map((photo) => (
                 <div key={photo.id} className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
                   <img 
-                    src={`http://localhost/aduan-desa/uploads/complaints/${photo.photo_path}`}
+                    src={getImageURL(photo.photo_path)}
                     alt={photo.caption || 'Foto bukti'}
                     className="w-full h-64 object-cover"
                     onError={(e) => {
+                      console.error('Image load error:', photo.photo_path);
                       e.target.src = 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
                     }}
                   />
