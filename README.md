@@ -31,7 +31,7 @@ Web application sistem pengaduan desa berbasis React
 
 ## 📦 Installation
 
-git clone https://github.com/YOUR_USERNAME/aduan-desa-frontend.git
+git clonehttps://github.com/Afrizal-Putra-Pratama/aduan-desa-frontend.git
 cd aduan-desa-frontend
 npm install
 cp .env.example .env
@@ -48,10 +48,10 @@ src/
 
 ## 🔗 Backend
 
-Backend: https://github.com/YOUR_USERNAME/backendAPI-skripsi (Private)
+Backend: (Private)
 
 ## 👨‍💻 Author
 
-Your Name - Computer Science Student
+Afrizal Putra Prarama - IT
 
-⭐ Star this repo if you find it helpful!
+SKRIPSI 
