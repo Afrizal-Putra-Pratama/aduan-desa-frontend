@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { complaintsAPI, deleteComplaint, categoriesAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import StatusBadge from '../components/common/StatusBadge';
+import ConfirmModal from '../components/common/ConfirmModal';
+import SuccessModal from '../components/common/SuccessModal';
 import { FiArrowLeft, FiClock, FiMapPin, FiMessageSquare, FiAlertCircle, FiEdit, FiTrash2, FiImage } from 'react-icons/fi';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -17,9 +19,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// ✅ GET API BASE URL FROM ENV
+// GET API BASE URL FROM ENV
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
-const BASE_URL = API_BASE_URL.replace('/api', ''); // For images
+const BASE_URL = API_BASE_URL.replace('/api', '');
 
 console.log('🔧 ComplaintDetail API_BASE_URL:', API_BASE_URL);
 console.log('🔧 ComplaintDetail BASE_URL:', BASE_URL);
@@ -32,6 +34,11 @@ function ComplaintDetail() {
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [categories, setCategories] = useState([]);
+  
+  // ✅ NEW: Modal states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchComplaintDetail();
@@ -50,7 +57,6 @@ function ComplaintDetail() {
     setLoading(false);
   };
 
-  // ✅ FIXED: Use apiService instead of hardcoded fetch
   const fetchCategories = async () => {
     try {
       const response = await categoriesAPI.getList();
@@ -62,25 +68,31 @@ function ComplaintDetail() {
     }
   };
 
+  // ✅ UPDATED: No more window.confirm or alert
   const handleDelete = async () => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus pengaduan ini?\n\nPengaduan yang sudah dihapus tidak dapat dikembalikan.')) {
-      return;
-    }
-
+    setShowDeleteConfirm(false); // Close confirm modal
+    
     const result = await deleteComplaint(complaint.id);
 
     if (result.success) {
-      alert('Pengaduan berhasil dihapus');
-      navigate('/complaints');
+      setSuccessMessage('Pengaduan berhasil dihapus');
+      setShowSuccessModal(true);
+      
+      // Redirect after modal auto-closes
+      setTimeout(() => {
+        navigate('/complaints');
+      }, 2000);
     } else {
-      alert('Gagal menghapus: ' + result.message);
+      setError('Gagal menghapus: ' + result.message);
     }
   };
 
+  // ✅ UPDATED: No more alert
   const handleEditSuccess = () => {
     setShowEditModal(false);
     fetchComplaintDetail();
-    alert('Pengaduan berhasil diupdate');
+    setSuccessMessage('Pengaduan berhasil diupdate');
+    setShowSuccessModal(true);
   };
 
   const getPriorityBadge = (priority) => {
@@ -114,14 +126,9 @@ function ComplaintDetail() {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
-  // ✅ Helper function for image URLs
   const getImageURL = (photoPath) => {
     if (!photoPath) return 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
-    
-    // If already full URL, return as is
     if (photoPath.startsWith('http')) return photoPath;
-    
-    // Build URL from base
     return `${BASE_URL}/uploads/complaints/${photoPath}`;
   };
 
@@ -208,7 +215,7 @@ function ComplaintDetail() {
             )}
           </div>
 
-          {/* Edit & Delete Buttons */}
+          {/* ✅ UPDATED: Edit & Delete Buttons with Modal */}
           {complaint.status === 'pending' ? (
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -220,7 +227,7 @@ function ComplaintDetail() {
                 Edit Pengaduan
               </Button>
               <Button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 variant="danger"
                 icon={<FiTrash2 />}
                 className="flex-1"
@@ -356,6 +363,30 @@ function ComplaintDetail() {
           onSuccess={handleEditSuccess}
         />
       )}
+
+      {/* ✅ NEW: Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Hapus Pengaduan?"
+        message="Pengaduan yang sudah dihapus tidak dapat dikembalikan. Apakah Anda yakin ingin menghapus pengaduan ini?"
+        confirmText="Hapus Sekarang"
+        cancelText="Batal"
+        type="danger"
+      />
+
+      {/* ✅ NEW: Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Berhasil!"
+        message={successMessage}
+        type="success"
+        autoClose={true}
+        autoCloseDelay={2000}
+        showButton={false}
+      />
     </div>
   );
 }
