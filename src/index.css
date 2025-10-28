@@ -1,0 +1,170 @@
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   NOTIFICATION BELL - DARK MODE SUPPORT
+   ======================================== */
+
+.notification-bell-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-bell-wrapper button {
+  background-color: transparent !important;
+  padding: 0.5rem !important;
+  border-radius: 0.5rem !important;
+  transition: background-color 0.2s ease !important;
+  cursor: pointer;
+  border: none;
+}
+
+.notification-bell-wrapper button:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.dark .notification-bell-wrapper button:hover {
+  background-color: rgba(51, 65, 85, 0.5) !important;
+}
+
+.notification-bell-wrapper svg,
+.notification-bell-wrapper .bell-icon,
+.notification-bell-wrapper path {
+  color: #475569 !important;
+  stroke: #475569 !important;
+  fill: none !important;
+}
+
+.dark .notification-bell-wrapper svg,
+.dark .notification-bell-wrapper .bell-icon,
+.dark .notification-bell-wrapper path {
+  color: #cbd5e1 !important;
+  stroke: #cbd5e1 !important;
+  fill: none !important;
+}
+
+.notification-bell-wrapper .notification-badge,
+.notification-bell-wrapper span[class*="bg-red"] {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+.notification-bell-wrapper * {
+  pointer-events: auto;
+}
+
+/* ========================================
+   MODAL ANIMATIONS
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* ========================================
+   TOAST NOTIFICATION ANIMATIONS
+   ======================================== */
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-slideOutRight {
+  animation: slideOutRight 0.3s ease-in;
+}
+
+.animate-shrink {
+  animation: shrink 6s linear;
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
