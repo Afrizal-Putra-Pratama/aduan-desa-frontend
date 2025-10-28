@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { categoriesAPI } from '../services/apiService';
+import { categoriesAPI, complaintsAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiUpload, FiEye, FiTrash2 } from 'react-icons/fi';
 import LocationPicker from '../components/LocationPicker';
-import axios from 'axios';
 
 function CreateComplaint() {
   const navigate = useNavigate();
@@ -56,7 +55,7 @@ function CreateComplaint() {
   const fetchCategories = async () => {
     const response = await categoriesAPI.getList();
     if (response.success) {
-      setCategories(response.data);
+      setCategories(response.categories || response.data || []);
     }
   };
 
@@ -69,11 +68,10 @@ function CreateComplaint() {
     setCoordinates(position);
   };
 
-  // Reset Coordinates - FIXED: reset state di parent
+  // Reset Coordinates
   const handleResetCoordinates = () => {
     console.log('🗑️ Resetting coordinates');
     setCoordinates(null);
-    // Force re-render LocationPicker dengan key change
     setShowMap(false);
     setTimeout(() => setShowMap(true), 100);
   };
@@ -128,8 +126,6 @@ function CreateComplaint() {
     setSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
-      
       const formDataToSend = new FormData();
       formDataToSend.append('category_id', formData.category_id);
       formDataToSend.append('title', formData.title);
@@ -146,22 +142,17 @@ function CreateComplaint() {
         formDataToSend.append('photos[]', photo);
       });
 
-      const response = await axios.post(
-        'http://localhost/aduan-desa/api/complaints/create.php',
-        formDataToSend,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      console.log('📤 Submitting complaint via complaintsAPI...');
+      
+      const response = await complaintsAPI.create(formDataToSend);
 
-      if (response.data.success) {
+      console.log('📥 Response:', response);
+
+      if (response.success) {
         setSuccess('Pengaduan berhasil dibuat!');
         setTimeout(() => navigate('/complaints'), 2000);
       } else {
-        setError(response.data.message);
+        setError(response.message || 'Gagal membuat pengaduan');
       }
     } catch (err) {
       console.error('Submit error:', err);
@@ -312,66 +303,65 @@ function CreateComplaint() {
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Opsional - Alamat lengkap lokasi pengaduan</p>
             </div>
 
-            {/* Map Section - IMPROVED UI */}
-            {/* Map Section - SUBTLE & CLEAN */}
-<div>
-  <div className="flex items-center justify-between mb-3">
-    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
-      Pilih Lokasi di Peta <span className="text-slate-400">(Opsional)</span>
-    </label>
-    
-    <div className="flex gap-2">
-      {showMap ? (
-        <button
-          type="button"
-          onClick={() => setShowMap(false)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
-        >
-          <FiX size={16} />
-          <span>Tutup</span>
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowMap(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium rounded-lg transition-colors border border-indigo-200 dark:border-indigo-800"
-        >
-          <FiMapPin size={16} />
-          <span>Buka Peta</span>
-        </button>
-      )}
-    </div>
-  </div>
+            {/* Map Section */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  Pilih Lokasi di Peta <span className="text-slate-400">(Opsional)</span>
+                </label>
+                
+                <div className="flex gap-2">
+                  {showMap ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowMap(false)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
+                    >
+                      <FiX size={16} />
+                      <span>Tutup</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowMap(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium rounded-lg transition-colors border border-indigo-200 dark:border-indigo-800"
+                    >
+                      <FiMapPin size={16} />
+                      <span>Buka Peta</span>
+                    </button>
+                  )}
+                </div>
+              </div>
 
-  {showMap && (
-    <div className="mt-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden relative z-0">
-      <LocationPicker 
-        key={coordinates ? 'with-coord' : 'no-coord'}
-        onLocationSelect={handleLocationSelect}
-        initialPosition={coordinates}
-      />
-    </div>
-  )}
+              {showMap && (
+                <div className="mt-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden relative z-0">
+                  <LocationPicker 
+                    key={coordinates ? 'with-coord' : 'no-coord'}
+                    onLocationSelect={handleLocationSelect}
+                    initialPosition={coordinates}
+                  />
+                </div>
+              )}
 
-  {coordinates && (
-    <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-0.5">Koordinat Terpilih</p>
-        <p className="text-sm font-mono text-indigo-800 dark:text-indigo-200">
-          {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={handleResetCoordinates}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
-      >
-        <FiTrash2 size={14} />
-        <span className="hidden sm:inline">Reset</span>
-      </button>
-    </div>
-  )}
-</div>
+              {coordinates && (
+                <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-0.5">Koordinat Terpilih</p>
+                    <p className="text-sm font-mono text-indigo-800 dark:text-indigo-200">
+                      {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetCoordinates}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-lg transition-colors"
+                  >
+                    <FiTrash2 size={14} />
+                    <span className="hidden sm:inline">Reset</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Upload Foto */}
             <div>
@@ -472,15 +462,16 @@ function CreateComplaint() {
                 fullWidth
                 size="lg"
                 icon={<FiEye />}
+                disabled={loading}
               >
-                Preview & Kirim Pengaduan
+                {loading ? 'Mengirim...' : 'Preview & Kirim Pengaduan'}
               </Button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* Modals... (sama seperti sebelumnya) */}
+      {/* Confirm Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full my-8 relative animate-scaleIn transition-colors">
@@ -555,7 +546,8 @@ function CreateComplaint() {
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg transition-colors"
+                  disabled={loading}
+                  className="flex-1 px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg transition-colors disabled:opacity-50"
                 >
                   Edit Lagi
                 </button>
@@ -572,6 +564,7 @@ function CreateComplaint() {
         </div>
       )}
 
+      {/* Priority Tooltip Modal */}
       {showPriorityTooltip && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 relative animate-scaleIn transition-colors">
