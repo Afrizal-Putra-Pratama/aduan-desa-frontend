@@ -11,7 +11,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import EditComplaintModal from '../components/EditComplaintModal';
 
-// Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -19,7 +18,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// GET API BASE URL FROM ENV
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
 const BASE_URL = API_BASE_URL.replace('/api', '');
 
@@ -34,8 +32,6 @@ function ComplaintDetail() {
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
   const [categories, setCategories] = useState([]);
-  
-  // ✅ NEW: Modal states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -51,6 +47,7 @@ function ComplaintDetail() {
     
     if (response.success) {
       setComplaint(response.data);
+      console.log('📸 Photos data:', response.data.photos);
     } else {
       setError(response.message);
     }
@@ -68,17 +65,13 @@ function ComplaintDetail() {
     }
   };
 
-  // ✅ UPDATED: No more window.confirm or alert
   const handleDelete = async () => {
-    setShowDeleteConfirm(false); // Close confirm modal
-    
+    setShowDeleteConfirm(false);
     const result = await deleteComplaint(complaint.id);
 
     if (result.success) {
       setSuccessMessage('Pengaduan berhasil dihapus');
       setShowSuccessModal(true);
-      
-      // Redirect after modal auto-closes
       setTimeout(() => {
         navigate('/complaints');
       }, 2000);
@@ -87,7 +80,6 @@ function ComplaintDetail() {
     }
   };
 
-  // ✅ UPDATED: No more alert
   const handleEditSuccess = () => {
     setShowEditModal(false);
     fetchComplaintDetail();
@@ -127,9 +119,23 @@ function ComplaintDetail() {
   };
 
   const getImageURL = (photoPath) => {
-    if (!photoPath) return 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
-    if (photoPath.startsWith('http')) return photoPath;
-    return `${BASE_URL}/uploads/complaints/${photoPath}`;
+    console.log('🖼️ Processing photo path:', photoPath);
+    
+    if (!photoPath) {
+      console.warn('⚠️ No photo path provided');
+      return 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
+    }
+    
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+      console.log('✅ Full URL:', photoPath);
+      return photoPath;
+    }
+    
+    const cleanPath = photoPath.startsWith('/') ? photoPath.substring(1) : photoPath;
+    const fullUrl = `${BASE_URL}/${cleanPath}`;
+    console.log('🔗 Built URL:', fullUrl);
+    
+    return fullUrl;
   };
 
   if (loading) {
@@ -169,7 +175,6 @@ function ComplaintDetail() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
-      {/* Navbar */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
           <button
@@ -184,9 +189,7 @@ function ComplaintDetail() {
         </div>
       </nav>
 
-      {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header Card */}
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-8 mb-6 transition-colors">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6">
             <div className="flex-1">
@@ -215,7 +218,6 @@ function ComplaintDetail() {
             )}
           </div>
 
-          {/* ✅ UPDATED: Edit & Delete Buttons with Modal */}
           {complaint.status === 'pending' ? (
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
@@ -242,7 +244,6 @@ function ComplaintDetail() {
           )}
         </div>
 
-        {/* Description Card */}
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-8 mb-6 transition-colors">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Detail Pengaduan</h2>
           <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
@@ -250,7 +251,6 @@ function ComplaintDetail() {
           </p>
         </div>
 
-        {/* Map Card */}
         {complaint.latitude && complaint.longitude && 
          parseFloat(complaint.latitude) !== 0 && parseFloat(complaint.longitude) !== 0 && (
           <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-8 mb-6 transition-colors">
@@ -286,37 +286,42 @@ function ComplaintDetail() {
           </div>
         )}
 
-        {/* Photos Card */}
         {complaint.photos && complaint.photos.length > 0 && (
           <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-8 mb-6 transition-colors">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
               <FiImage className="text-indigo-600 dark:text-indigo-400" />
-              Foto Bukti
+              Foto Bukti ({complaint.photos.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {complaint.photos.map((photo) => (
-                <div key={photo.id} className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
-                  <img 
-                    src={getImageURL(photo.photo_path)}
-                    alt={photo.caption || 'Foto bukti'}
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      console.error('Image load error:', photo.photo_path);
-                      e.target.src = 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
-                    }}
-                  />
-                  {photo.caption && (
-                    <div className="p-3 bg-slate-50 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600">
-                      <p className="text-sm text-slate-600 dark:text-slate-400">{photo.caption}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {complaint.photos.map((photo) => {
+                const imageUrl = getImageURL(photo.photo_path);
+                return (
+                  <div key={photo.id} className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
+                    <img 
+                      src={imageUrl}
+                      alt={photo.caption || 'Foto bukti'}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        console.error('❌ Image load error:', photo.photo_path);
+                        console.error('❌ Tried URL:', imageUrl);
+                        e.target.src = 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
+                      }}
+                      onLoad={() => {
+                        console.log('✅ Image loaded successfully:', imageUrl);
+                      }}
+                    />
+                    {photo.caption && (
+                      <div className="p-3 bg-slate-50 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600">
+                        <p className="text-sm text-slate-600 dark:text-slate-400">{photo.caption}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Responses Card */}
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-8 transition-colors">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
             <FiMessageSquare className="text-indigo-600 dark:text-indigo-400" />
@@ -354,7 +359,6 @@ function ComplaintDetail() {
         </div>
       </div>
 
-      {/* Edit Modal */}
       {showEditModal && (
         <EditComplaintModal
           complaint={complaint}
@@ -364,7 +368,6 @@ function ComplaintDetail() {
         />
       )}
 
-      {/* ✅ NEW: Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
@@ -376,7 +379,6 @@ function ComplaintDetail() {
         type="danger"
       />
 
-      {/* ✅ NEW: Success Modal */}
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
