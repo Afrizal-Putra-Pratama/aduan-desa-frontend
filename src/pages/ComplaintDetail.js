@@ -118,6 +118,7 @@ function ComplaintDetail() {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
+  // ✅ FIXED FUNCTION
   const getImageURL = (photoPath) => {
     console.log('🖼️ Processing photo path:', photoPath);
     
@@ -131,7 +132,14 @@ function ComplaintDetail() {
       return photoPath;
     }
     
-    const cleanPath = photoPath.startsWith('/') ? photoPath.substring(1) : photoPath;
+    let cleanPath = photoPath.startsWith('/') ? photoPath.substring(1) : photoPath;
+    
+    // ✅ FIX: Add uploads/complaints/ if missing
+    if (!cleanPath.includes('uploads/complaints/')) {
+      cleanPath = `uploads/complaints/${cleanPath}`;
+      console.log('🔧 Added path prefix:', cleanPath);
+    }
+    
     const fullUrl = `${BASE_URL}/${cleanPath}`;
     console.log('🔗 Built URL:', fullUrl);
     
