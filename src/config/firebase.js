@@ -11,16 +11,11 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Messaging conditionally
 let messaging = null;
 
-// ✅ CHECK IF MESSAGING IS SUPPORTED
 const initMessaging = async () => {
   try {
-    // Check if running on HTTPS or localhost
     const isLocalHost = window.location.hostname === 'localhost';
     const isHttps = window.location.protocol === 'https:';
     
@@ -33,6 +28,10 @@ const initMessaging = async () => {
     if (supported) {
       messaging = getMessaging(app);
       console.log('✅ Firebase Messaging initialized');
+      
+      // ✅ NEW: Setup foreground message listener immediately
+      setupForegroundListener();
+      
       return messaging;
     } else {
       console.warn('⚠️ Firebase Messaging not supported in this browser');
@@ -42,6 +41,67 @@ const initMessaging = async () => {
     console.warn('⚠️ Firebase Messaging initialization skipped:', error.message);
     return null;
   }
+};
+
+// ✅ NEW: Foreground notification handler
+const setupForegroundListener = () => {
+  if (!messaging) return;
+  
+  onMessage(messaging, (payload) => {
+    console.log('📬 Foreground message received:', payload);
+    
+    // Show notification manually when app is open
+    if (Notification.permission === 'granted') {
+      const notificationTitle = payload.notification?.title || 'Notifikasi Baru';
+      const notificationOptions = {
+        body: payload.notification?.body || 'Ada update baru di sistem aduan',
+        icon: '/logo192.png',
+        badge: '/logo192.png',
+        tag: payload.data?.type || 'default',
+        requireInteraction: true,
+        data: payload.data,
+        silent: false
+      };
+
+      // Create and show notification
+      const notification = new Notification(notificationTitle, notificationOptions);
+      
+      // Handle notification click
+      notification.onclick = function(event) {
+        event.preventDefault();
+        
+        // Determine URL based on notification type
+        let targetUrl = '/';
+        if (payload.data) {
+          if (payload.data.type === 'status_update' || payload.data.type === 'new_response') {
+            targetUrl = `/complaints/${payload.data.complaint_id}`;
+          } else if (payload.data.type === 'new_complaint') {
+            targetUrl = '/admin/complaints';
+          } else if (payload.data.click_action) {
+            targetUrl = payload.data.click_action;
+          }
+        }
+        
+        // Focus window and navigate
+        window.focus();
+        window.location.href = targetUrl;
+        notification.close();
+      };
+      
+      // Auto close after 10 seconds
+      setTimeout(() => notification.close(), 10000);
+      
+      // Play sound (optional)
+      try {
+        const audio = new Audio('/notification-sound.mp3');
+        audio.play().catch(err => console.log('Audio play failed:', err));
+      } catch (err) {
+        console.log('Audio not available');
+      }
+    } else {
+      console.log('⚠️ Notification permission not granted');
+    }
+  });
 };
 
 // Request notification permission
@@ -77,7 +137,8 @@ export const requestNotificationPermission = async () => {
   }
 };
 
-// Listen for messages
+// ✅ DEPRECATED: Use setupForegroundListener instead
+// Keep for backward compatibility
 export const onMessageListener = () =>
   new Promise((resolve) => {
     if (!messaging) {
@@ -91,4 +152,4 @@ export const onMessageListener = () =>
     });
   });
 
-export { app, messaging };
+export { app, messaging, initMessaging };
