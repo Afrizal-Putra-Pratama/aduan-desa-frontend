@@ -1,31 +1,131 @@
+# ========================================
+# DEPENDENCIES
+# ========================================
 node_modules/
 /.pnp
 .pnp.js
+bower_components/
+
+# ========================================
+# TESTING
+# ========================================
 /coverage
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# ========================================
+# BUILD
+# ========================================
 /build
 /dist
+/.next/
+/out/
+
+# ========================================
+# ENVIRONMENT
+# ========================================
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+
+# ========================================
+# FIREBASE CONFIG (SENSITIVE!)
+# ========================================
+src/config/firebase.js
+src/firebase-config.js
+firebase-config.js
+firebase-service-account.json
+
+# ========================================
+# LOGS
+# ========================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ========================================
+# IDE
+# ========================================
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ========================================
+# PACKAGE LOCKS
+# ========================================
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+
+# ========================================
+# OS FILES
+# ========================================
 .DS_Store
 Thumbs.db
 desktop.ini
-# SSL Certificates
+*.DS_Store
+
+# ========================================
+# SSL CERTIFICATES
+# ========================================
 *.crt
 *.key
+*.pem
 ca.crt
 ca.key
 cert.crt
 cert.key
+ssl/
+certs/
+
+# ========================================
+# TEMPORARY & CACHE
+# ========================================
+*.tmp
+*.bak
+*.cache
+*.old
+*.backup
+~*
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ========================================
+# MISC
+# ========================================
+.vercel
+.netlify
+.firebase/
+.expo/
+.expo-shared/
+
+# ========================================
+# SOURCEMAPS (Optional - remove if you want to keep)
+# ========================================
+*.map
+
+# ========================================
+# STORYBOOK
+# ========================================
+storybook-static/
+
+# ========================================
+# TYPESCRIPT
+# ========================================
+*.tsbuildinfo

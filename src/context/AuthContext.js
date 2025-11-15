@@ -47,18 +47,45 @@ export const AuthProvider = ({ children }) => {
             console.warn('⚠️ Token mismatch on load - clearing session');
             console.warn('Token user_id:', tokenUserId);
             console.warn('Stored user_id:', storedUserId);
+            
+            // ✅ Save remember me data before clear
+            const savedUsername = localStorage.getItem('remembered_username');
+            const savedPhone = localStorage.getItem('remembered_phone');
+            
             localStorage.clear();
             sessionStorage.clear();
+            
+            // ✅ Restore remember me data
+            if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
+            if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
           }
         } else {
           console.warn('⚠️ Invalid token format - clearing session');
+          
+          // ✅ Save remember me data before clear
+          const savedUsername = localStorage.getItem('remembered_username');
+          const savedPhone = localStorage.getItem('remembered_phone');
+          
           localStorage.clear();
           sessionStorage.clear();
+          
+          // ✅ Restore remember me data
+          if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
+          if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
         }
       } catch (e) {
         console.error('❌ Session load error:', e);
+        
+        // ✅ Save remember me data before clear
+        const savedUsername = localStorage.getItem('remembered_username');
+        const savedPhone = localStorage.getItem('remembered_phone');
+        
         localStorage.clear();
         sessionStorage.clear();
+        
+        // ✅ Restore remember me data
+        if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
+        if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
       }
     } else {
       console.log('ℹ️ No stored session found');
@@ -122,14 +149,33 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     console.log('🚪 Logging out user:', user?.name);
     
-    // ✅ Clear ALL data
+    // ✅ SAVE REMEMBER ME DATA BEFORE LOGOUT
+    const savedUsername = localStorage.getItem('remembered_username');
+    const savedPhone = localStorage.getItem('remembered_phone');
+    
+    console.log('💾 Preserving remember me data:', { 
+      username: savedUsername, 
+      phone: savedPhone ? savedPhone.substring(0, 5) + '***' : null 
+    });
+    
+    // Clear auth data
     setUser(null);
     setToken(null);
     
     localStorage.clear();
     sessionStorage.clear();
     
-    console.log('✅ Logout complete - All data cleared');
+    // ✅ RESTORE REMEMBER ME DATA AFTER LOGOUT
+    if (savedUsername) {
+      localStorage.setItem('remembered_username', savedUsername);
+      console.log('✅ Username preserved:', savedUsername);
+    }
+    if (savedPhone) {
+      localStorage.setItem('remembered_phone', savedPhone);
+      console.log('✅ Phone preserved:', savedPhone.substring(0, 5) + '***');
+    }
+    
+    console.log('✅ Logout complete - Remember me data preserved');
   };
 
   return (

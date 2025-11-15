@@ -1,15 +1,15 @@
 import axios from 'axios';
 
-// At top of apiService.js
-const API_BASE_URL = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api';console.log('🔧 API_BASE_URL (HARDCODED):', API_BASE_URL);
-console.log('🔧 API_BASE_URL (HARDCODED):', API_BASE_URL);
+// API Base URL
+const API_BASE_URL = 'http://localhost/aduan-desa/api';
+console.log('🔧 API_BASE_URL:', API_BASE_URL);
+
 // Add check
 if (!API_BASE_URL) {
   console.error('❌ REACT_APP_API_URL not set!');
   console.error('Using fallback: http://localhost/aduan-desa/api');
 }
 
-console.log('🔧 API_BASE_URL:', API_BASE_URL); // 
 // Helper function untuk request dengan token
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
@@ -27,12 +27,11 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       url: `${API_BASE_URL}/${endpoint}`,
       headers: {
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': '69420', // ✅ NGROK BYPASS
+        'ngrok-skip-browser-warning': '69420',
       },
       timeout: 10000,
     };
 
-    // ✅ ADD TOKEN TO HEADERS
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       console.log('✅ Token added to headers');
@@ -67,25 +66,187 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
   }
 };
 
+// =============================
 // Auth API
+// =============================
 export const authAPI = {
+  // ✅ REGISTER LAMA (keep for backward compatibility)
   register: async (userData) => {
     return await apiRequest('auth/register.php', 'POST', userData);
   },
   
+  // ✅ LOGIN LAMA (keep for backward compatibility)
   login: async (credentials) => {
     return await apiRequest('auth/login.php', 'POST', credentials);
   },
+
+  // 🆕 REGISTER DIRECT (TANPA OTP) - DIPAKAI
+  registerDirect: async (data) => {
+    console.log('🔵 Register Direct - No OTP');
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/register-without-otp.php`,
+        {
+          username: data.username,
+          phone: data.phone,
+          address: data.address
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 10000
+        }
+      );
+      console.log('✅ Registration complete:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Register error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal registrasi'
+      };
+    }
+  },
+
+  // 🆕 REGISTER STEP 1: Send OTP (FOR FUTURE USE)
+  registerStep1: async (data) => {
+    console.log('🔵 Register Step 1 - Sending OTP');
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/register-with-otp.php`,
+        {
+          step: 'register',
+          username: data.username,
+          phone: data.phone,
+          address: data.address
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 15000
+        }
+      );
+      console.log('✅ OTP sent:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Register Step 1 error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal mengirim OTP. Pastikan WhatsApp bot berjalan.'
+      };
+    }
+  },
+
+  // 🆕 REGISTER STEP 2: Verify OTP (FOR FUTURE USE)
+  registerStep2: async (data) => {
+    console.log('🔵 Register Step 2 - Verifying OTP');
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/register-with-otp.php`,
+        {
+          step: 'verify',
+          username: data.username,
+          phone: data.phone,
+          address: data.address,
+          otp: data.otp
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 10000
+        }
+      );
+      console.log('✅ Registration complete:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Register Step 2 error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal verifikasi OTP'
+      };
+    }
+  },
+
+  // 🆕 LOGIN STEP 1: Request OTP (Username + Phone) - UPDATED
+  loginRequestOTP: async (username, phone) => {
+    console.log('🔵 Login - Requesting OTP for:', username, phone);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/login-with-otp.php`,
+        {
+          step: 'request_otp',
+          username: username,
+          phone: phone
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 15000
+        }
+      );
+      console.log('✅ OTP sent for login:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Login request OTP error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal mengirim OTP'
+      };
+    }
+  },
+
+  // 🆕 LOGIN STEP 2: Verify OTP & Login (Username + Phone + OTP) - UPDATED
+  loginVerifyOTP: async (username, phone, otp) => {
+    console.log('🔵 Login - Verifying OTP');
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/login-with-otp.php`,
+        {
+          step: 'verify_otp',
+          username: username,
+          phone: phone,
+          otp: otp
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 10000
+        }
+      );
+      console.log('✅ Login successful:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Login verify OTP error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal verifikasi OTP'
+      };
+    }
+  }
 };
 
+// =============================
 // Categories API
+// =============================
 export const categoriesAPI = {
   getList: async () => {
     return await apiRequest('categories/list.php', 'GET');
   }
 };
 
+// =============================
 // Complaints API
+// =============================
 export const complaintsAPI = {
   getList: async () => {
     return await apiRequest('complaints/list.php', 'GET');
@@ -109,7 +270,7 @@ export const complaintsAPI = {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
-            'ngrok-skip-browser-warning': '69420', // ✅ NGROK BYPASS
+            'ngrok-skip-browser-warning': '69420',
           },
           timeout: 30000,
         }
@@ -143,7 +304,7 @@ export const complaintsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         }
       });
       return await response.json();
@@ -154,14 +315,18 @@ export const complaintsAPI = {
   },
 };
 
+// =============================
 // Profile API
+// =============================
 export const profileAPI = {
   get: async () => await apiRequest('profile/get.php', 'GET'),
   update: async (data) => await apiRequest('profile/update.php', 'POST', data),
   changePassword: async (data) => await apiRequest('profile/change-password.php', 'POST', data)
 };
 
+// =============================
 // Notifications API
+// =============================
 export const notificationsAPI = {
   getList: async () => {
     try {
@@ -171,7 +336,7 @@ export const notificationsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         }
       });
       return await response.json();
@@ -189,7 +354,7 @@ export const notificationsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         },
         body: JSON.stringify({ notification_id: notificationId })
       });
@@ -208,7 +373,7 @@ export const notificationsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         }
       });
       return await response.json();
@@ -226,7 +391,7 @@ export const notificationsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         },
         body: JSON.stringify({ notification_id: notificationId })
       });
@@ -245,7 +410,7 @@ export const notificationsAPI = {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+          'ngrok-skip-browser-warning': '69420'
         }
       });
       return await response.json();
@@ -256,7 +421,9 @@ export const notificationsAPI = {
   }
 };
 
+// =============================
 // Update complaint
+// =============================
 export const updateComplaint = async (id, complaintData) => {
   try {
     const token = localStorage.getItem('token');
@@ -266,7 +433,7 @@ export const updateComplaint = async (id, complaintData) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+        'ngrok-skip-browser-warning': '69420'
       },
       body: JSON.stringify(complaintData)
     });
@@ -279,7 +446,9 @@ export const updateComplaint = async (id, complaintData) => {
   }
 };
 
+// =============================
 // Delete complaint
+// =============================
 export const deleteComplaint = async (id) => {
   try {
     const token = localStorage.getItem('token');
@@ -288,7 +457,7 @@ export const deleteComplaint = async (id) => {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
+        'ngrok-skip-browser-warning': '69420'
       }
     });
     
@@ -300,7 +469,9 @@ export const deleteComplaint = async (id) => {
   }
 };
 
+// =============================
 // Dashboard API
+// =============================
 export const dashboardAPI = {
   getStats: async () => await apiRequest('dashboard/stats.php', 'GET'),
 };

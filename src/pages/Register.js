@@ -2,194 +2,206 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/apiService';
 import Button from '../components/common/Button';
+import { FiUser, FiPhone, FiMapPin, FiAlertCircle } from 'react-icons/fi';
 import ThemeToggle from '../components/common/ThemeToggle';
-import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
-
-// ✅ MOVE OUTSIDE - FIXED!
-const InputField = ({ label, helperText, icon, ...props }) => (
-  <div>
-    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
-      {label} {props.required && <span className="text-red-500">*</span>}
-    </label>
-    <div className="relative">
-      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500">
-        {icon}
-      </div>
-      <input
-        {...props}
-        className="w-full pl-10 pr-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500"
-      />
-    </div>
-    {helperText && (
-      <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-        {helperText}
-      </p>
-    )}
-  </div>
-);
 
 function Register() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    address: '',
-  });
+
+  // Form data
+  const [username, setUsername] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError('');
+  // Validasi Username (Bebas)
+  const validateUsername = (username) => {
+    if (username.length < 3 || username.length > 50) {
+      return 'Username harus 3-50 karakter';
+    }
+    return null;
   };
 
+  // Validasi No HP
+  const validatePhone = (phoneNumber) => {
+    if (!/^\d+$/.test(phoneNumber)) {
+      return 'Nomor HP hanya boleh berisi angka';
+    }
+    if (!phoneNumber.startsWith('08')) {
+      return 'Nomor HP harus diawali dengan 08';
+    }
+    if (phoneNumber.length < 10 || phoneNumber.length > 13) {
+      return 'Nomor HP harus 10-13 digit';
+    }
+    return null;
+  };
+
+  // Handle Phone Input (Hanya Angka)
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    if (value === '' || /^\d+$/.test(value)) {
+      if (value.length <= 13) {
+        setPhone(value);
+      }
+    }
+  };
+
+  // Submit Registration (Langsung tanpa OTP)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-    setSuccess('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Password tidak cocok');
-      setLoading(false);
+    // Validasi username
+    const usernameError = validateUsername(username);
+    if (usernameError) {
+      setError(usernameError);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password minimal 6 karakter');
-      setLoading(false);
+    // Validasi phone
+    const phoneError = validatePhone(phone);
+    if (phoneError) {
+      setError(phoneError);
       return;
     }
+
+    // Validasi address
+    if (!address.trim() || address.trim().length < 10) {
+      setError('Alamat minimal 10 karakter');
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const { confirmPassword, ...dataToSend } = formData;
-      const response = await authAPI.register(dataToSend);
-      
+      const response = await authAPI.registerDirect({
+        username,
+        phone,
+        address
+      });
+
       if (response.success) {
-        setSuccess('Registrasi berhasil! Mengalihkan ke login...');
-        setTimeout(() => navigate('/login'), 2000);
+        alert('✅ Registrasi berhasil! Silakan login untuk verifikasi nomor HP');
+        navigate('/login');
       } else {
-        setError(response.message || 'Registrasi gagal');
+        setError(response.message);
       }
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+    } catch (error) {
+      setError('Gagal registrasi');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4 py-8 transition-colors">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4 transition-colors">
       <div className="absolute top-4 right-4 z-10">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-2xl">
-        {/* Header */}
-        <div className="text-center mb-5">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">
-            Daftar Akun Baru
+      <div className="w-full max-w-md">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+            Sistem Aduan Desa
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Sistem Aduan Desa Wonokerso
+            Desa Wonokerso
           </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 md:p-8 transition-colors">
-          {/* Error Alert */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 transition-colors">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2">
-              <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={18} />
-              <p className="text-xs md:text-sm text-red-800 dark:text-red-200 font-medium">{error}</p>
-            </div>
-          )}
-          
-          {/* Success Alert */}
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-2">
-              <FiCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" size={18} />
-              <p className="text-xs md:text-sm text-green-800 dark:text-green-200 font-medium">{success}</p>
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
+              <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
+              <p className="text-sm text-red-800 dark:text-red-200 font-medium">
+                {error}
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Two Column Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InputField
-                label="Nama Lengkap"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Masukkan nama lengkap"
-                icon={<FiUser size={18} />}
-                required
-              />
-
-              <InputField
-                label="Email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="nama@email.com"
-                icon={<FiMail size={18} />}
-                helperText="Gunakan email aktif untuk verifikasi"
-                required
-              />
-
-              <InputField
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Minimal 6 karakter"
-                icon={<FiLock size={18} />}
-                helperText="Kombinasi huruf dan angka lebih aman"
-                required
-              />
-
-              <InputField
-                label="Konfirmasi Password"
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Ulangi password"
-                icon={<FiLock size={18} />}
-                required
-              />
-
-              <InputField
-                label="Nomor HP"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="08xxxxxxxxxx"
-                icon={<FiPhone size={18} />}
-                helperText="Opsional, untuk notifikasi penting"
-              />
-
-              <InputField
-                label="Alamat"
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="Desa Wonokerso"
-                icon={<FiMapPin size={18} />}
-                helperText="Opsional, alamat lengkap Anda"
-              />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Username Input */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                  <FiUser size={18} />
+                </div>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Nama atau username Anda"
+                  maxLength={50}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Bebas, minimal 3 karakter
+              </p>
             </div>
 
-            {/* Submit Button */}
+            {/* No HP Input */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
+                Nomor HP
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+                  <FiPhone size={18} />
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  placeholder="08123456789"
+                  maxLength={13}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Format: 08xxxxxxxxxx (10-13 digit, untuk verifikasi login)
+              </p>
+            </div>
+
+            {/* Alamat Input */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
+                Alamat Lengkap
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-3 text-slate-400 dark:text-slate-500">
+                  <FiMapPin size={18} />
+                </div>
+                <textarea
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="RT/RW, Dusun, Desa"
+                  rows={3}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none transition-all"
+                  required
+                />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                Minimal 10 karakter
+              </p>
+            </div>
+
+            {/* Button Daftar */}
             <Button
               type="submit"
               variant="primary"
@@ -197,13 +209,13 @@ function Register() {
               size="lg"
               loading={loading}
             >
-              {loading ? 'Memproses...' : 'Daftar Sekarang'}
+              {loading ? 'Mendaftar...' : 'Daftar'}
             </Button>
           </form>
 
           {/* Login Link */}
-          <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-center text-xs md:text-sm text-slate-600 dark:text-slate-400">
+          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
+            <p className="text-center text-sm text-slate-600 dark:text-slate-400">
               Sudah punya akun?{' '}
               <Link 
                 to="/login" 
@@ -215,8 +227,7 @@ function Register() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           <p className="text-xs text-slate-500 dark:text-slate-500">
             © 2025 Desa Wonokerso
           </p>
