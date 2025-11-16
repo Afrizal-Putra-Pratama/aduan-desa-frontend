@@ -118,23 +118,25 @@ function ComplaintDetail() {
     return new Date(dateString).toLocaleDateString('id-ID', options);
   };
 
-  // ✅ FIXED FUNCTION
+  // ✅ FIXED FUNCTION - BULLETPROOF IMAGE URL
   const getImageURL = (photoPath) => {
     console.log('🖼️ Processing photo path:', photoPath);
     
     if (!photoPath) {
       console.warn('⚠️ No photo path provided');
-      return 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
+      return null; // Return null instead of placeholder
     }
     
+    // If already full URL, return as is
     if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
       console.log('✅ Full URL:', photoPath);
       return photoPath;
     }
     
+    // Clean path
     let cleanPath = photoPath.startsWith('/') ? photoPath.substring(1) : photoPath;
     
-    // ✅ FIX: Add uploads/complaints/ if missing
+    // Add uploads/complaints/ prefix if missing
     if (!cleanPath.includes('uploads/complaints/')) {
       cleanPath = `uploads/complaints/${cleanPath}`;
       console.log('🔧 Added path prefix:', cleanPath);
@@ -144,6 +146,17 @@ function ComplaintDetail() {
     console.log('🔗 Built URL:', fullUrl);
     
     return fullUrl;
+  };
+
+  // ✅ HANDLE IMAGE ERROR - NO EXTERNAL PLACEHOLDER
+  const handleImageError = (e, photoName) => {
+    console.log('❌ Image load error:', photoName);
+    console.log('❌ Tried URL:', e.target.src);
+    
+    // Base64 gray placeholder - ALWAYS WORKS
+    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="400" height="300" fill="%23e5e7eb"/%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="18" fill="%239ca3af" text-anchor="middle" dy=".3em"%3EFoto Tidak Tersedia%3C/text%3E%3C/svg%3E';
+    
+    e.target.onerror = null; // Prevent infinite loop
   };
 
   if (loading) {
@@ -303,20 +316,26 @@ function ComplaintDetail() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {complaint.photos.map((photo) => {
                 const imageUrl = getImageURL(photo.photo_path);
+                
+                if (!imageUrl) {
+                  return (
+                    <div key={photo.id} className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 flex items-center justify-center h-64">
+                      <div className="text-center">
+                        <div className="text-6xl mb-2">📷</div>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Foto Tidak Tersedia</p>
+                      </div>
+                    </div>
+                  );
+                }
+                
                 return (
                   <div key={photo.id} className="border-2 border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
                     <img 
                       src={imageUrl}
                       alt={photo.caption || 'Foto bukti'}
                       className="w-full h-64 object-cover"
-                      onError={(e) => {
-                        console.error('❌ Image load error:', photo.photo_path);
-                        console.error('❌ Tried URL:', imageUrl);
-                        e.target.src = 'https://via.placeholder.com/400x300?text=Foto+Tidak+Ditemukan';
-                      }}
-                      onLoad={() => {
-                        console.log('✅ Image loaded successfully:', imageUrl);
-                      }}
+                      onError={(e) => handleImageError(e, photo.photo_path)}
+                      onLoad={() => console.log('✅ Image loaded:', imageUrl)}
                     />
                     {photo.caption && (
                       <div className="p-3 bg-slate-50 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600">
