@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API Base URL
-const API_BASE_URL = 'http://localhost/aduan-desa/api';
+const API_BASE_URL = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api';
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
 // Add check
