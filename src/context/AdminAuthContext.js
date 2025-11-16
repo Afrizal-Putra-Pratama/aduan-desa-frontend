@@ -26,40 +26,41 @@ export const AdminAuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // ✅ UPDATED: Pakai Ngrok URL
-  const saveFCMToken = async (fcmToken) => {
-    try {
-      // ✅ Ganti ke Ngrok URL agar bisa diakses dari HP
-      const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/admin/save-fcm-token.php';
-      
-      console.log('💾 Saving Admin FCM token to:', apiUrl);
-      console.log('🔑 Admin FCM Token (preview):', fcmToken.substring(0, 30) + '...');
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ Skip ngrok warning
-        },
-        body: JSON.stringify({ 
-          fcm_token: fcmToken,
-          device_info: navigator.userAgent
-        })
-      });
-      
-      const result = await response.json();
-      console.log('💾 Admin FCM response:', result);
-      
-      if (result.success) {
-        console.log('✅ Admin FCM token saved');
-      } else {
-        console.error('❌ Failed to save admin FCM token:', result.message);
-      }
-    } catch (error) {
-      console.error('❌ Error saving admin FCM token:', error);
+// ✅ SIMPLE: Pakai Ngrok URL untuk semua environment
+const saveFCMToken = async (fcmToken) => {
+  try {
+    // ✅ Pakai Ngrok URL (untuk laptop & HP)
+    const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/admin/save-fcm-token.php';
+    
+    console.log('💾 Saving Admin FCM token to:', apiUrl);
+    console.log('🔑 Admin FCM Token (preview):', fcmToken.substring(0, 30) + '...');
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        'ngrok-skip-browser-warning': '69420'
+      },
+      body: JSON.stringify({ 
+        fcm_token: fcmToken,
+        device_info: navigator.userAgent
+      })
+    });
+    
+    const result = await response.json();
+    console.log('💾 Admin FCM response:', result);
+    
+    if (result.success) {
+      console.log('✅ Admin FCM token saved');
+    } else {
+      console.error('❌ Failed to save admin FCM token:', result.message);
     }
-  };
+  } catch (error) {
+    console.error('❌ Error saving admin FCM token:', error);
+  }
+};
+
 
   const login = async (adminData, adminToken) => {
     console.log('🔐 Admin login...', adminData.username);

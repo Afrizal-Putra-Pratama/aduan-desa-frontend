@@ -92,37 +92,38 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // ✅ UPDATED: Function untuk simpan FCM token ke backend (pakai Ngrok URL)
-  const saveFCMToken = async (fcmToken) => {
-    try {
-      // ✅ Pakai Ngrok URL agar bisa diakses dari HP
-      const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/users/save-fcm-token.php';
-      
-      console.log('💾 Saving FCM token to:', apiUrl);
-      console.log('🔑 FCM Token (preview):', fcmToken.substring(0, 30) + '...');
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'ngrok-skip-browser-warning': '69420' // ✅ Skip ngrok warning
-        },
-        body: JSON.stringify({ fcm_token: fcmToken })
-      });
-      
-      const result = await response.json();
-      console.log('💾 Save FCM response:', result);
-      
-      if (result.success) {
-        console.log('✅ FCM token saved successfully');
-      } else {
-        console.error('❌ Failed to save FCM token:', result.message);
-      }
-    } catch (error) {
-      console.error('❌ Error saving FCM token:', error);
+// ✅ SIMPLE: Pakai Ngrok URL untuk semua environment
+const saveFCMToken = async (fcmToken) => {
+  try {
+    // ✅ Pakai Ngrok URL (untuk laptop & HP)
+    const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/users/save-fcm-token.php';
+    
+    console.log('💾 Saving FCM token to:', apiUrl);
+    console.log('🔑 FCM Token (preview):', fcmToken.substring(0, 30) + '...');
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        'ngrok-skip-browser-warning': '69420'
+      },
+      body: JSON.stringify({ fcm_token: fcmToken })
+    });
+    
+    const result = await response.json();
+    console.log('💾 Save FCM response:', result);
+    
+    if (result.success) {
+      console.log('✅ FCM token saved successfully');
+    } else {
+      console.error('❌ Failed to save FCM token:', result.message);
     }
-  };
+  } catch (error) {
+    console.error('❌ Error saving FCM token:', error);
+  }
+};
+
 
   const login = async (userData, userToken) => {
     console.log('🔐 Setting up new session...');
