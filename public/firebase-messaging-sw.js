@@ -55,7 +55,7 @@ self.addEventListener('push', function(event) {
     const notificationData = payload.notification || {};
     const customData = payload.data || {};
     
-    const notificationTitle = notificationData.title || customData.title || '📢 Notifikasi Baru';
+    const notificationTitle = notificationData.title || customData.title || 'Notifikasi Baru';
     const notificationOptions = {
       body: notificationData.body || customData.body || 'Ada update baru',
       icon: notificationData.icon || '/logo192.png',
@@ -66,8 +66,8 @@ self.addEventListener('push', function(event) {
       silent: false,
       vibrate: [200, 100, 200],
       actions: customData.type === 'new_complaint' ? [
-        { action: 'view', title: '👁️ Lihat' },
-        { action: 'close', title: '✖️ Tutup' }
+        { action: 'view', title: ' Lihat' },
+        { action: 'close', title: ' Tutup' }
       ] : []
     };
     

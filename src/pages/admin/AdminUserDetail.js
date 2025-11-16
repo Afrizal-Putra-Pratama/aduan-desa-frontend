@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/adminAPI';
-import { FiArrowLeft, FiMail, FiPhone, FiMapPin, FiCalendar, FiKey, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import ResetPasswordModal from '../../components/ResetPasswordModal';
+import { FiArrowLeft, FiPhone, FiMapPin, FiCalendar, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 function AdminUserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userDetail, setUserDetail] = useState(null);
-  const [showResetModal, setShowResetModal] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  useEffect(() => {
-    fetchUserDetail();
-  }, [id]);
+useEffect(() => {
+  fetchUserDetail();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [id]);
+
 
   const fetchUserDetail = async () => {
     setLoading(true);
@@ -29,15 +29,6 @@ function AdminUserDetail() {
       navigate('/admin/users');
     }
     setLoading(false);
-  };
-
-  const handleResetPassword = () => {
-    setShowResetModal(true);
-  };
-
-  const handleResetSuccess = () => {
-    setShowResetModal(false);
-    alert('Password berhasil direset!');
   };
 
   const handleDelete = async () => {
@@ -65,10 +56,10 @@ function AdminUserDetail() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      in_progress: 'bg-blue-100 text-blue-800',
-      completed: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+      in_progress: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+      completed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+      rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
     };
     const labels = {
       pending: '⏳ Menunggu',
@@ -97,10 +88,10 @@ function AdminUserDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-gray-600">Memuat detail user...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-400">Memuat detail user...</p>
         </div>
       </div>
     );
@@ -108,12 +99,12 @@ function AdminUserDetail() {
 
   if (!userDetail) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 text-lg">User tidak ditemukan</p>
+          <p className="text-slate-600 dark:text-slate-400 text-lg">User tidak ditemukan</p>
           <button
             onClick={() => navigate('/admin/users')}
-            className="mt-4 text-indigo-600 hover:text-indigo-800 font-semibold"
+            className="mt-4 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold"
           >
             Kembali ke Daftar User
           </button>
@@ -123,19 +114,19 @@ function AdminUserDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-      {/* Header / Navbar - Simplified */}
-      <div className="bg-white shadow-md sticky top-0 z-30">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
+      {/* Header / Navbar */}
+      <div className="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-30 transition-colors">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/admin/users')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 font-semibold text-sm sm:text-base"
+              className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-semibold text-sm sm:text-base transition-colors"
             >
               <FiArrowLeft />
               <span>Kembali</span>
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
               Detail User
             </h1>
           </div>
@@ -145,65 +136,50 @@ function AdminUserDetail() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* User Info Card with Actions */}
+          {/* User Info Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-indigo-100">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 transition-colors">
               {/* Avatar and Name */}
               <div className="text-center mb-6">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-full mx-auto flex items-center justify-center text-white text-3xl font-bold mb-4 shadow-lg">
                   {userDetail.user.name.charAt(0).toUpperCase()}
                 </div>
-                <h2 className="text-xl font-bold text-gray-800 break-words">{userDetail.user.name}</h2>
-                <p className="text-sm text-gray-500">User ID: #{userDetail.user.id}</p>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 break-words">{userDetail.user.name}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400">User ID: #{userDetail.user.id}</p>
               </div>
 
               {/* User Info */}
               <div className="space-y-4 text-left mb-6">
-                <div className="flex items-start gap-3 bg-indigo-50 p-3 rounded-lg">
-                  <FiMail className="text-indigo-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                  <FiPhone className="text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Email</p>
-                    <p className="text-sm font-semibold text-gray-800 break-words">{userDetail.user.email}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Telepon</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 break-words">{userDetail.user.phone || '-'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 bg-purple-50 p-3 rounded-lg">
-                  <FiPhone className="text-purple-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 bg-pink-50 dark:bg-pink-900/20 p-3 rounded-lg">
+                  <FiMapPin className="text-pink-600 dark:text-pink-400 mt-1 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Telepon</p>
-                    <p className="text-sm font-semibold text-gray-800 break-words">{userDetail.user.phone || '-'}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Alamat</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 break-words">{userDetail.user.address || '-'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 bg-pink-50 p-3 rounded-lg">
-                  <FiMapPin className="text-pink-600 mt-1 flex-shrink-0" />
+                <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <FiCalendar className="text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Alamat</p>
-                    <p className="text-sm font-semibold text-gray-800 break-words">{userDetail.user.address || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 bg-blue-50 p-3 rounded-lg">
-                  <FiCalendar className="text-blue-600 mt-1 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-semibold">Bergabung</p>
-                    <p className="text-sm font-semibold text-gray-800">{formatDate(userDetail.user.created_at)}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Bergabung</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{formatDate(userDetail.user.created_at)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleResetPassword}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition font-semibold shadow-md"
-                >
-                  <FiKey />
-                  <span>Reset Password</span>
-                </button>
+              <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <button
                   onClick={handleDelete}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition font-semibold shadow-md"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition font-semibold shadow-md"
                 >
                   <FiTrash2 />
                   <span>Hapus User</span>
@@ -235,14 +211,14 @@ function AdminUserDetail() {
             </div>
 
             {/* Complaints List with Pagination */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border border-indigo-100">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-200 dark:border-slate-700 transition-colors">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">
                 Riwayat Pengaduan ({complaints.length})
               </h3>
 
               {complaints.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">Belum ada pengaduan dari user ini</p>
+                  <p className="text-slate-500 dark:text-slate-400">Belum ada pengaduan dari user ini</p>
                 </div>
               ) : (
                 <>
@@ -250,21 +226,21 @@ function AdminUserDetail() {
                     {paginatedComplaints.map((complaint) => (
                       <div
                         key={complaint.id}
-                        className="border-2 border-gray-200 rounded-xl p-4 hover:border-indigo-400 hover:shadow-md transition cursor-pointer bg-gradient-to-r from-white to-indigo-50"
+                        className="border-2 border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md transition cursor-pointer bg-gradient-to-r from-white to-indigo-50 dark:from-slate-800 dark:to-indigo-900/20"
                         onClick={() => navigate(`/admin/complaints/${complaint.id}`)}
                       >
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-800 mb-1 truncate">
+                            <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-1 truncate">
                               {complaint.title}
                             </h4>
-                            <p className="text-sm text-gray-600 line-clamp-2 break-words">{complaint.description}</p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 break-words">{complaint.description}</p>
                           </div>
                           <div className="ml-0 sm:ml-4 flex-shrink-0">
                             {getStatusBadge(complaint.status)}
                           </div>
                         </div>
-                        <div className="flex flex-col sm:flex-row text-xs text-gray-500 gap-2">
+                        <div className="flex flex-col sm:flex-row text-xs text-slate-500 dark:text-slate-400 gap-2">
                           <span>📁 {complaint.category_name}</span>
                           <span>🕒 {formatDate(complaint.created_at)}</span>
                         </div>
@@ -274,18 +250,18 @@ function AdminUserDetail() {
 
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
                       >
                         <FiChevronLeft />
                         <span className="hidden sm:inline">Sebelumnya</span>
                       </button>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 font-semibold">
+                        <span className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
                           Halaman {currentPage} dari {totalPages}
                         </span>
                       </div>
@@ -293,7 +269,7 @@ function AdminUserDetail() {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
                       >
                         <span className="hidden sm:inline">Selanjutnya</span>
                         <FiChevronRight />
@@ -306,15 +282,6 @@ function AdminUserDetail() {
           </div>
         </div>
       </div>
-
-      {/* Reset Password Modal */}
-      {showResetModal && (
-        <ResetPasswordModal
-          user={userDetail.user}
-          onClose={() => setShowResetModal(false)}
-          onSuccess={handleResetSuccess}
-        />
-      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { complaintsAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import ThemeToggle from '../components/common/ThemeToggle';
-import { FiPlus, FiList, FiLogOut, FiClock, FiCheckCircle, FiAlertCircle, FiUser, FiGlobe, FiRefreshCw, FiBarChart2, FiSettings, FiMapPin, FiCamera, FiEye } from 'react-icons/fi';
+import { FiPlus, FiList, FiLogOut, FiClock, FiCheckCircle, FiAlertCircle, FiUser, FiGlobe, FiRefreshCw, FiBarChart2, FiSettings, FiMapPin, FiCamera, FiEye, FiX } from 'react-icons/fi';
 import NotificationBell from '../components/NotificationBell';
 
 function Dashboard() {
@@ -21,6 +21,8 @@ function Dashboard() {
   const [error, setError] = useState(null);
   
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const profileMenuRef = useRef(null);
 
   useEffect(() => {
@@ -87,9 +89,18 @@ function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogoutClick = () => {
+    setShowProfileMenu(false);
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setLoggingOut(true);
+    
+    setTimeout(() => {
+      logout();
+      navigate('/login');
+    }, 500);
   };
 
   if (loading) {
@@ -105,7 +116,7 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
-      {/* Navbar - IMPROVED SPACING */}
+      {/* Navbar */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 sticky top-0 z-50 shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
           <h1 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100">
@@ -113,7 +124,6 @@ function Dashboard() {
             <span className="sm:hidden">Aduan Desa</span>
           </h1>
           
-          {/* Right: Icons with BETTER SPACING */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <div className="notification-bell-wrapper">
@@ -136,7 +146,7 @@ function Dashboard() {
                       {user?.name}
                     </p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                      {user?.email}
+                      {user?.phone}
                     </p>
                   </div>
 
@@ -156,10 +166,7 @@ function Dashboard() {
                   <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
 
                   <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      handleLogout();
-                    }}
+                    onClick={handleLogoutClick}
                     className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <FiLogOut className="text-red-600 dark:text-red-400" size={18} />
@@ -313,7 +320,7 @@ function Dashboard() {
           </button>
         </div>
 
-        {/* Tips Box - REDESIGNED COMPACT */}
+        {/* Tips Box */}
         <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl shadow-md p-6 md:p-8">
           <div className="flex items-start gap-4 mb-4">
             <div className="text-3xl md:text-4xl">💡</div>
@@ -365,6 +372,59 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-scaleIn transition-colors">
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              disabled={loggingOut}
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiX size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+
+            <div className="text-center">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FiLogOut className="text-red-600 dark:text-red-400" size={40} />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
+                Logout dari Akun?
+              </h3>
+              
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Apakah Anda yakin ingin keluar dari akun <strong>{user?.name}</strong>?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  disabled={loggingOut}
+                  className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmLogout}
+                  disabled={loggingOut}
+                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loggingOut ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Logout...</span>
+                    </>
+                  ) : (
+                    'Ya, Logout'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

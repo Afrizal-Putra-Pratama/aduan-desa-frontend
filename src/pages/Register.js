@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authAPI } from '../services/apiService';
 import Button from '../components/common/Button';
-import { FiUser, FiPhone, FiMapPin, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiPhone, FiMapPin, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
 import ThemeToggle from '../components/common/ThemeToggle';
 
 function Register() {
@@ -15,6 +15,7 @@ function Register() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Validasi Username (Bebas)
   const validateUsername = (username) => {
@@ -48,7 +49,7 @@ function Register() {
     }
   };
 
-  // Submit Registration (Langsung tanpa OTP)
+  // Submit Registration
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -83,16 +84,27 @@ function Register() {
       });
 
       if (response.success) {
-        alert('✅ Registrasi berhasil! Silakan login untuk verifikasi nomor HP');
-        navigate('/login');
+        // ✅ Tampilkan modal success
+        setShowSuccessModal(true);
       } else {
         setError(response.message);
       }
     } catch (error) {
-      setError('Gagal registrasi');
+      setError('Gagal registrasi. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ Handle redirect ke login dari modal
+  const handleGoToLogin = () => {
+    navigate('/login', { 
+      state: { 
+        registrationSuccess: true,
+        username: username,
+        phone: phone
+      } 
+    });
   };
 
   return (
@@ -113,7 +125,7 @@ function Register() {
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 transition-colors">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
               <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
               <p className="text-sm text-red-800 dark:text-red-200 font-medium">
                 {error}
@@ -140,7 +152,8 @@ function Register() {
                   }}
                   placeholder="Nama atau username Anda"
                   maxLength={50}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  disabled={loading}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -166,7 +179,8 @@ function Register() {
                   onChange={handlePhoneChange}
                   placeholder="08123456789"
                   maxLength={13}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  disabled={loading}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -192,7 +206,8 @@ function Register() {
                   }}
                   placeholder="RT/RW, Dusun, Desa"
                   rows={3}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none transition-all"
+                  disabled={loading}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -233,6 +248,47 @@ function Register() {
           </p>
         </div>
       </div>
+
+      {/* ✅ Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-scaleIn transition-colors">
+            <button
+              onClick={handleGoToLogin}
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              <FiX size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+
+            <div className="text-center">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <FiCheckCircle className="text-green-600 dark:text-green-400" size={40} />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
+                Registrasi Berhasil!
+              </h3>
+              
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Akun Anda telah berhasil dibuat. Silakan login untuk memverifikasi nomor HP dan mulai menggunakan sistem.
+              </p>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Info:</strong> Login pertama akan mengirim kode OTP ke WhatsApp Anda untuk verifikasi.
+                </p>
+              </div>
+
+              <button
+                onClick={handleGoToLogin}
+                className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                Lanjut ke Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

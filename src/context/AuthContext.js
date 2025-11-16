@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         
         console.log('📦 Stored user:', parsedUser.name, '(ID:', parsedUser.id + ')');
         
-        // ✅ Verify token matches user
+        // Verify token matches user
         const parts = storedToken.split('.');
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1]));
@@ -46,42 +46,42 @@ export const AuthProvider = ({ children }) => {
           } else {
             console.warn('⚠️ Token mismatch on load - clearing session');
             
-            // ✅ Save remember me data before clear
+            // Save remember me data before clear
             const savedUsername = localStorage.getItem('remembered_username');
             const savedPhone = localStorage.getItem('remembered_phone');
             
             localStorage.clear();
             sessionStorage.clear();
             
-            // ✅ Restore remember me data
+            // Restore remember me data
             if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
             if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
           }
         } else {
           console.warn('⚠️ Invalid token format - clearing session');
           
-          // ✅ Save remember me data before clear
+          // Save remember me data before clear
           const savedUsername = localStorage.getItem('remembered_username');
           const savedPhone = localStorage.getItem('remembered_phone');
           
           localStorage.clear();
           sessionStorage.clear();
           
-          // ✅ Restore remember me data
+          // Restore remember me data
           if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
           if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
         }
       } catch (e) {
         console.error('❌ Session load error:', e);
         
-        // ✅ Save remember me data before clear
+        // Save remember me data before clear
         const savedUsername = localStorage.getItem('remembered_username');
         const savedPhone = localStorage.getItem('remembered_phone');
         
         localStorage.clear();
         sessionStorage.clear();
         
-        // ✅ Restore remember me data
+        // Restore remember me data
         if (savedUsername) localStorage.setItem('remembered_username', savedUsername);
         if (savedPhone) localStorage.setItem('remembered_phone', savedPhone);
       }
@@ -92,38 +92,36 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-// ✅ SIMPLE: Pakai Ngrok URL untuk semua environment
-const saveFCMToken = async (fcmToken) => {
-  try {
-    // ✅ Pakai Ngrok URL (untuk laptop & HP)
-    const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/users/save-fcm-token.php';
-    
-    console.log('💾 Saving FCM token to:', apiUrl);
-    console.log('🔑 FCM Token (preview):', fcmToken.substring(0, 30) + '...');
-    
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        'ngrok-skip-browser-warning': '69420'
-      },
-      body: JSON.stringify({ fcm_token: fcmToken })
-    });
-    
-    const result = await response.json();
-    console.log('💾 Save FCM response:', result);
-    
-    if (result.success) {
-      console.log('✅ FCM token saved successfully');
-    } else {
-      console.error('❌ Failed to save FCM token:', result.message);
+  // Save FCM Token
+  const saveFCMToken = async (fcmToken) => {
+    try {
+      const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/users/save-fcm-token.php';
+      
+      console.log('💾 Saving FCM token to:', apiUrl);
+      console.log('🔑 FCM Token (preview):', fcmToken.substring(0, 30) + '...');
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'ngrok-skip-browser-warning': '69420'
+        },
+        body: JSON.stringify({ fcm_token: fcmToken })
+      });
+      
+      const result = await response.json();
+      console.log('💾 Save FCM response:', result);
+      
+      if (result.success) {
+        console.log('✅ FCM token saved successfully');
+      } else {
+        console.error('❌ Failed to save FCM token:', result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error saving FCM token:', error);
     }
-  } catch (error) {
-    console.error('❌ Error saving FCM token:', error);
-  }
-};
-
+  };
 
   const login = async (userData, userToken) => {
     console.log('🔐 Setting up new session...');
@@ -136,7 +134,7 @@ const saveFCMToken = async (fcmToken) => {
     
     console.log('✅ Session established');
     
-    // 🔔 Request notification permission & save FCM token
+    // Request notification permission & save FCM token
     setTimeout(async () => {
       try {
         console.log('🔔 Requesting notification permission...');
@@ -157,7 +155,7 @@ const saveFCMToken = async (fcmToken) => {
   const logout = () => {
     console.log('🚪 Logging out user:', user?.name);
     
-    // ✅ SAVE REMEMBER ME DATA BEFORE LOGOUT
+    // SAVE REMEMBER ME DATA BEFORE LOGOUT
     const savedUsername = localStorage.getItem('remembered_username');
     const savedPhone = localStorage.getItem('remembered_phone');
     
@@ -173,7 +171,7 @@ const saveFCMToken = async (fcmToken) => {
     localStorage.clear();
     sessionStorage.clear();
     
-    // ✅ RESTORE REMEMBER ME DATA AFTER LOGOUT
+    // RESTORE REMEMBER ME DATA AFTER LOGOUT
     if (savedUsername) {
       localStorage.setItem('remembered_username', savedUsername);
       console.log('✅ Username preserved:', savedUsername);

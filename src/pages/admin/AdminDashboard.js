@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { complaintsAPI } from '../../services/apiService';
 import Button from '../../components/common/Button';
 import ThemeToggle from '../../components/common/ThemeToggle';
-import { FiLogOut, FiUsers, FiFileText, FiClock, FiCheckCircle, FiAlertCircle, FiMap, FiGrid, FiRefreshCw, FiXCircle, FiEye, FiFilter, FiBell } from 'react-icons/fi';
+import { FiLogOut, FiUsers, FiFileText, FiClock, FiCheckCircle, FiAlertCircle, FiMap, FiGrid, FiRefreshCw, FiXCircle, FiEye, FiFilter, FiBell, FiX } from 'react-icons/fi';
 import AdminDashboardChart from '../../components/AdminDashboardChart';
 
 function AdminDashboard() {
@@ -19,6 +19,10 @@ function AdminDashboard() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // ✅ Logout modal states
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     const adminData = JSON.parse(localStorage.getItem('admin_data') || 'null');
@@ -53,10 +57,29 @@ function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_data');
-    navigate('/admin/login');
+  // ✅ Show logout confirmation modal
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  // ✅ Confirm and execute logout
+  const confirmLogout = () => {
+    setLoggingOut(true);
+    
+    setTimeout(() => {
+      // Preserve remember me data
+      const savedEmail = localStorage.getItem('remembered_admin_email');
+      const savedPassword = localStorage.getItem('remembered_admin_password');
+      
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_data');
+      
+      // Restore remember me data
+      if (savedEmail) localStorage.setItem('remembered_admin_email', savedEmail);
+      if (savedPassword) localStorage.setItem('remembered_admin_password', savedPassword);
+      
+      navigate('/admin/login');
+    }, 500);
   };
 
   if (loading) {
@@ -72,7 +95,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
-      {/* Navbar - CLEAN */}
+      {/* Navbar */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
           <h1 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100">
@@ -83,7 +106,7 @@ function AdminDashboard() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <button
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
               className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm font-medium"
             >
               <FiLogOut size={18} />
@@ -94,7 +117,7 @@ function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Welcome Card - NO ICON, NO ROLE */}
+        {/* Welcome Card */}
         <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 md:p-8 mb-8 text-white">
           <h2 className="text-2xl md:text-3xl font-bold mb-2">
             Selamat Datang, {admin?.name}!
@@ -230,7 +253,7 @@ function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tips Admin - IMPROVED UI */}
+        {/* Tips Admin */}
         <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl shadow-md p-6 md:p-8 transition-colors">
           <div className="flex items-start gap-4 mb-6">
             <div className="text-3xl md:text-4xl">💡</div>
@@ -272,6 +295,59 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ✅ Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-scaleIn transition-colors">
+            <button
+              onClick={() => setShowLogoutModal(false)}
+              disabled={loggingOut}
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiX size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+
+            <div className="text-center">
+              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FiLogOut className="text-red-600 dark:text-red-400" size={40} />
+              </div>
+              
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
+                Logout dari Admin Panel?
+              </h3>
+              
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Apakah Anda yakin ingin keluar dari akun admin <strong>{admin?.name}</strong>?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutModal(false)}
+                  disabled={loggingOut}
+                  className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmLogout}
+                  disabled={loggingOut}
+                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loggingOut ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Logout...</span>
+                    </>
+                  ) : (
+                    'Ya, Logout'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

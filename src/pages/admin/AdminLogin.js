@@ -41,6 +41,7 @@ function AdminLogin() {
       setEmail(savedEmail);
       setPassword(atob(savedPassword));
       setRememberMe(true);
+      console.log('✅ Loaded saved admin credentials');
     }
   }, []);
 
@@ -58,73 +59,76 @@ function AdminLogin() {
       return;
     }
 
-    const response = await adminAPI.login(email.trim(), password);
-    
-    console.log('📥 Login response:', response);
-
-    if (response.success) {
-      // Save/Remove credentials based on "Ingat Saya"
-      if (rememberMe) {
-        localStorage.setItem('remembered_admin_email', email);
-        localStorage.setItem('remembered_admin_password', btoa(password));
-        console.log('💾 Admin credentials saved');
-      } else {
-        localStorage.removeItem('remembered_admin_email');
-        localStorage.removeItem('remembered_admin_password');
-        console.log('🗑️ Admin credentials removed');
-      }
-
-      localStorage.setItem('admin_token', response.token);
-      localStorage.setItem('admin_data', JSON.stringify(response.admin));
-      console.log('✅ Login successful');
+    try {
+      const response = await adminAPI.login(email.trim(), password);
       
-      // ✅ FIXED: Request FCM Token with error handling
-      setTimeout(async () => {
-        try {
-          console.log('🔔 Requesting admin notification permission...');
-          
-          const fcmToken = await requestNotificationPermission();
-          
-          if (fcmToken) {
-            console.log('🔑 Admin FCM Token received:', fcmToken.substring(0, 30) + '...');
-            
-            // ✅ FIXED: Use API_URL from environment
-            const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
-            
-            // Save to backend
-            const saveResponse = await fetch(`${API_URL}/admin/save-fcm-token.php`, {
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer ' + response.token,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ fcm_token: fcmToken })
-            });
-            
-            const saveResult = await saveResponse.json();
-            
-            if (saveResult.success) {
-              console.log('✅ Admin FCM token saved to backend');
-            } else {
-              console.error('❌ Failed to save admin FCM token:', saveResult.message);
-            }
-          } else {
-            // ✅ FIXED: Handle case when FCM not available (HTTP/non-HTTPS)
-            console.log('ℹ️ FCM not available - requires HTTPS or localhost');
-          }
-        } catch (error) {
-          // ✅ FIXED: Non-critical error, don't block login
-          console.warn('⚠️ Error requesting admin notification (non-critical):', error.message);
+      console.log('📥 Login response:', response);
+
+      if (response.success) {
+        // Save/Remove credentials based on "Ingat Saya"
+        if (rememberMe) {
+          localStorage.setItem('remembered_admin_email', email);
+          localStorage.setItem('remembered_admin_password', btoa(password));
+          console.log('💾 Admin credentials saved');
+        } else {
+          localStorage.removeItem('remembered_admin_email');
+          localStorage.removeItem('remembered_admin_password');
+          console.log('🗑️ Admin credentials removed');
         }
-      }, 1000);
-      
-      navigate('/admin/dashboard');
-    } else {
-      console.log('❌ Login failed:', response.message);
-      setError(response.message || 'Email atau password salah');
+
+        localStorage.setItem('admin_token', response.token);
+        localStorage.setItem('admin_data', JSON.stringify(response.admin));
+        console.log('✅ Admin login successful');
+        
+        // Request FCM Token with error handling
+        setTimeout(async () => {
+          try {
+            console.log('🔔 Requesting admin notification permission...');
+            
+            const fcmToken = await requestNotificationPermission();
+            
+            if (fcmToken) {
+              console.log('🔑 Admin FCM Token received:', fcmToken.substring(0, 30) + '...');
+              
+              const API_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+              
+              // Save to backend
+              const saveResponse = await fetch(`${API_URL}/admin/save-fcm-token.php`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + response.token,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fcm_token: fcmToken })
+              });
+              
+              const saveResult = await saveResponse.json();
+              
+              if (saveResult.success) {
+                console.log('✅ Admin FCM token saved to backend');
+              } else {
+                console.error('❌ Failed to save admin FCM token:', saveResult.message);
+              }
+            } else {
+              console.log('ℹ️ FCM not available - requires HTTPS or localhost');
+            }
+          } catch (error) {
+            // Non-critical error, don't block login
+            console.warn('⚠️ Error requesting admin notification (non-critical):', error.message);
+          }
+        }, 1000);
+        
+        navigate('/admin/dashboard');
+      } else {
+        console.log('❌ Login failed:', response.message);
+        setError(response.message || 'Email atau password salah');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      setError('Terjadi kesalahan saat login. Silakan coba lagi.');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
@@ -135,7 +139,7 @@ function AdminLogin() {
       </div>
 
       <div className="w-full max-w-md">
-        {/* Header - COMPACT */}
+        {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1">
             Portal Admin
@@ -145,7 +149,7 @@ function AdminLogin() {
           </p>
         </div>
 
-        {/* Card - COMPACT */}
+        {/* Card */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6 md:p-8 transition-colors">
           <div className="mb-5">
             <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-slate-100 mb-1">
@@ -156,9 +160,9 @@ function AdminLogin() {
             </p>
           </div>
 
-          {/* Error Alert - COMPACT */}
+          {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-2 animate-fadeIn">
               <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={18} />
               <p className="text-xs md:text-sm text-red-800 dark:text-red-200 font-medium">
                 {error}
@@ -171,7 +175,10 @@ function AdminLogin() {
               label="Email Admin"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setError('');
+              }}
               placeholder="admin@wonokerso.go.id"
               icon={<FiMail size={18} />}
               disabled={loading}
@@ -182,7 +189,10 @@ function AdminLogin() {
               label="Password"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError('');
+              }}
               placeholder="Masukkan password admin"
               icon={<FiLock size={18} />}
               disabled={loading}
@@ -195,7 +205,8 @@ function AdminLogin() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  disabled={loading}
+                  className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 />
                 <span className="text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors select-none">
                   Ingat saya
@@ -214,7 +225,7 @@ function AdminLogin() {
             </Button>
           </form>
 
-          {/* Info Box - COMPACT */}
+          {/* Info Box */}
           <div className="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700">
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 transition-colors">
               <div className="flex items-start gap-2">
@@ -226,7 +237,7 @@ function AdminLogin() {
                     Izinkan Notifikasi
                   </p>
                   <p className="text-xs text-blue-700 dark:text-blue-300">
-                    Untuk menerima alert pengaduan baru secara real-time (memerlukan HTTPS)
+                    Untuk menerima alert pengaduan baru secara real-time
                   </p>
                 </div>
               </div>
@@ -234,7 +245,7 @@ function AdminLogin() {
           </div>
         </div>
 
-        {/* Footer - COMPACT */}
+        {/* Footer */}
         <div className="mt-4 text-center">
           <p className="text-xs text-slate-500 dark:text-slate-500">
             © 2025 Desa Wonokerso

@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI, complaintsAPI } from '../services/apiService';
 import Button from '../components/common/Button';
-import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiUpload, FiEye, FiTrash2 } from 'react-icons/fi';
+import { useToast } from '../components/common/Toast';
+import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiUpload, FiTrash2 } from 'react-icons/fi';
 import LocationPicker from '../components/LocationPicker';
+
+const DRAFT_KEY = 'complaint_draft';
 
 function CreateComplaint() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     category_id: '',
@@ -21,17 +25,26 @@ function CreateComplaint() {
   const [photoPreviews, setPhotoPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [showPriorityTooltip, setShowPriorityTooltip] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   // Navbar scroll state
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
+  // ✅ Load draft from localStorage on mount
   useEffect(() => {
     fetchCategories();
+    loadDraft();
   }, []);
+
+  // ✅ Auto-save draft whenever form changes
+  useEffect(() => {
+    if (draftLoaded) {
+      saveDraft();
+    }
+  }, [formData, coordinates, draftLoaded]);
 
   // Auto-hide navbar on scroll
   useEffect(() => {
@@ -55,8 +68,54 @@ function CreateComplaint() {
   const fetchCategories = async () => {
     const response = await categoriesAPI.getList();
     if (response.success) {
-      setCategories(response.categories || response.data || []);
+      setCategories(response.data || response.categories || []);
     }
+  };
+
+  // ✅ Load draft from localStorage
+  const loadDraft = () => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        
+        if (draft.formData) {
+          setFormData(draft.formData);
+        }
+        
+        if (draft.coordinates) {
+          setCoordinates(draft.coordinates);
+        }
+        
+        console.log('Draft loaded from localStorage');
+        toast.info('Draft sebelumnya telah dipulihkan');
+      }
+    } catch (error) {
+      console.error('Error loading draft:', error);
+    } finally {
+      setDraftLoaded(true);
+    }
+  };
+
+  // ✅ Save draft to localStorage
+  const saveDraft = () => {
+    try {
+      const draft = {
+        formData,
+        coordinates,
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch (error) {
+      console.error('Error saving draft:', error);
+    }
+  };
+
+  // ✅ Clear draft after successful submit
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    console.log('✅ Draft cleared');
   };
 
   const handleChange = (e) => {
@@ -68,7 +127,6 @@ function CreateComplaint() {
     setCoordinates(position);
   };
 
-  // Reset Coordinates
   const handleResetCoordinates = () => {
     console.log('🗑️ Resetting coordinates');
     setCoordinates(null);
@@ -80,13 +138,13 @@ function CreateComplaint() {
     const files = Array.from(e.target.files);
     
     if (photos.length + files.length > 5) {
-      setError('Maksimal 5 foto');
+      toast.error('❌ Maksimal 5 foto');
       return;
     }
 
     for (let file of files) {
       if (file.size > 5242880) {
-        setError('Ukuran foto maksimal 5MB');
+        toast.error('❌ Ukuran foto maksimal 5MB');
         return;
       }
     }
@@ -95,6 +153,8 @@ function CreateComplaint() {
     
     const newPreviews = files.map(file => URL.createObjectURL(file));
     setPhotoPreviews([...photoPreviews, ...newPreviews]);
+    
+    toast.success(`✅ ${files.length} foto berhasil ditambahkan`);
   };
 
   const removePhoto = (index) => {
@@ -105,6 +165,8 @@ function CreateComplaint() {
     
     setPhotos(newPhotos);
     setPhotoPreviews(newPreviews);
+    
+    toast.info('🗑️ Foto dihapus');
   };
 
   const handleFormSubmit = (e) => {
@@ -113,6 +175,7 @@ function CreateComplaint() {
     
     if (!formData.category_id) {
       setError('Pilih kategori terlebih dahulu');
+      toast.error('❌ Pilih kategori terlebih dahulu');
       return;
     }
     
@@ -123,7 +186,6 @@ function CreateComplaint() {
     setShowConfirmModal(false);
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
       const formDataToSend = new FormData();
@@ -149,13 +211,16 @@ function CreateComplaint() {
       console.log('📥 Response:', response);
 
       if (response.success) {
-        setSuccess('Pengaduan berhasil dibuat!');
-        setTimeout(() => navigate('/complaints'), 2000);
+        clearDraft();
+        toast.success('✅ Pengaduan berhasil dibuat!');
+        setTimeout(() => navigate('/complaints'), 1500);
       } else {
+        toast.error('❌ ' + (response.message || 'Gagal membuat pengaduan'));
         setError(response.message || 'Gagal membuat pengaduan');
       }
     } catch (err) {
       console.error('Submit error:', err);
+      toast.error('❌ Gagal membuat pengaduan. Silakan coba lagi.');
       setError('Gagal membuat pengaduan. Silakan coba lagi.');
     } finally {
       setLoading(false);
@@ -169,9 +234,9 @@ function CreateComplaint() {
 
   const getPriorityLabel = () => {
     const labels = {
-      low: '🟢 Rendah',
-      medium: '🟡 Sedang',
-      high: '🔴 Tinggi'
+      low: 'Rendah',
+      medium: 'Sedang',
+      high: 'Tinggi'
     };
     return labels[formData.priority] || formData.priority;
   };
@@ -184,10 +249,10 @@ function CreateComplaint() {
           showNavbar ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-center relative">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <button
             onClick={() => navigate('/dashboard')}
-            className="absolute left-4 flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-slate-700 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium rounded-lg border border-slate-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
+            className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-slate-700 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium rounded-lg border border-slate-200 dark:border-slate-600 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all shadow-sm"
           >
             <FiArrowLeft size={20} />
             <span className="hidden md:inline">Kembali</span>
@@ -196,34 +261,27 @@ function CreateComplaint() {
           <h1 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100 text-center px-2">
             Buat Pengaduan Baru
           </h1>
+          
+          <div className="w-20 md:w-28"></div>
         </div>
       </nav>
 
-      {/* Spacer */}
       <div className="h-16"></div>
 
-      {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 md:p-8 transition-colors">
-          {/* Alerts */}
+          {/* Error Alert (Fallback jika toast tidak cukup) */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
               <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
               <span className="text-sm text-red-800 dark:text-red-200 font-medium">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-800 rounded-xl flex items-start gap-3">
-              <FiCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" size={20} />
-              <span className="text-sm text-green-800 dark:text-green-200 font-medium">{success}</span>
             </div>
           )}
 
           {/* Info Box */}
           <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl transition-colors">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>💡 Tips:</strong> Pastikan Anda memberikan informasi yang lengkap dan jelas agar pengaduan dapat segera ditangani.
+              <strong>💡 Info:</strong> Data form akan tersimpan otomatis. Anda dapat melanjutkan mengisi form kapan saja.
             </p>
           </div>
 
@@ -318,7 +376,7 @@ function CreateComplaint() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg transition-colors border border-slate-200 dark:border-slate-600"
                     >
                       <FiX size={16} />
-                      <span>Tutup</span>
+                      Tutup
                     </button>
                   ) : (
                     <button
@@ -327,7 +385,7 @@ function CreateComplaint() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-medium rounded-lg transition-colors border border-indigo-200 dark:border-indigo-800"
                     >
                       <FiMapPin size={16} />
-                      <span>Buka Peta</span>
+                      Buka Peta
                     </button>
                   )}
                 </div>
@@ -427,12 +485,9 @@ function CreateComplaint() {
                     e.preventDefault();
                     setShowPriorityTooltip(!showPriorityTooltip);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-100 dark:bg-indigo-900/30 hover:bg-indigo-200 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-medium transition-colors"
+                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium underline"
                 >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  <span>Tips Urgensi</span>
+                  Lihat Panduan
                 </button>
               </div>
               
@@ -448,9 +503,9 @@ function CreateComplaint() {
                   backgroundSize: '1rem'
                 }}
               >
-                <option value="low">🟢 Rendah - Tidak mendesak</option>
-                <option value="medium">🟡 Sedang - Perlu penanganan segera</option>
-                <option value="high">🔴 Tinggi - Sangat mendesak!</option>
+                <option value="low">Rendah - Tidak mendesak</option>
+                <option value="medium">Sedang - Perlu penanganan segera</option>
+                <option value="high">Tinggi - Sangat mendesak!</option>
               </select>
             </div>
 
@@ -461,10 +516,9 @@ function CreateComplaint() {
                 variant="primary"
                 fullWidth
                 size="lg"
-                icon={<FiEye />}
-                disabled={loading}
+                loading={loading}
               >
-                {loading ? 'Mengirim...' : 'Preview & Kirim Pengaduan'}
+                Kirim Pengaduan
               </Button>
             </div>
           </form>
@@ -517,7 +571,7 @@ function CreateComplaint() {
                 {coordinates && (
                   <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Koordinat</p>
-                    <p className="text-sm text-slate-700 dark:text-slate-300">{coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>
+                    <p className="text-sm font-mono text-slate-700 dark:text-slate-300">{coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>
                   </div>
                 )}
 
@@ -544,20 +598,22 @@ function CreateComplaint() {
               </div>
 
               <div className="mt-6 flex gap-3">
-                <button
+                <Button
                   onClick={() => setShowConfirmModal(false)}
                   disabled={loading}
-                  className="flex-1 px-5 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg transition-colors disabled:opacity-50"
+                  variant="secondary"
+                  className="flex-1"
                 >
                   Edit Lagi
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleConfirmSubmit}
-                  disabled={loading}
-                  className="flex-1 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors shadow-md disabled:opacity-50"
+                  loading={loading}
+                  variant="primary"
+                  className="flex-1"
                 >
-                  {loading ? 'Mengirim...' : 'Ya, Kirim Sekarang'}
-                </button>
+                  Ya, Kirim Sekarang
+                </Button>
               </div>
             </div>
           </div>
@@ -576,47 +632,33 @@ function CreateComplaint() {
             </button>
             
             <div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
-                  <svg className="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Panduan Tingkat Urgensi</h3>
-              </div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-5">Panduan Tingkat Urgensi</h3>
               
               <div className="space-y-4">
-                <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-900/30 border-2 border-gray-200 dark:border-gray-700 rounded-xl">
-                  <span className="text-2xl">🟢</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 dark:text-gray-200 mb-1">Rendah</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Tidak mendesak, bisa ditangani dalam waktu seminggu atau lebih</p>
-                  </div>
+                <div className="p-4 bg-slate-50 dark:bg-slate-900/30 border-2 border-slate-200 dark:border-slate-700 rounded-xl">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-1">Rendah</h4>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Tidak mendesak, bisa ditangani dalam waktu seminggu atau lebih</p>
                 </div>
                 
-                <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-xl">
-                  <span className="text-2xl">🟡</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-orange-800 dark:text-orange-200 mb-1">Sedang</h4>
-                    <p className="text-sm text-orange-700 dark:text-orange-300">Perlu penanganan dalam 2-3 hari</p>
-                  </div>
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-xl">
+                  <h4 className="font-bold text-orange-800 dark:text-orange-200 mb-1">Sedang</h4>
+                  <p className="text-sm text-orange-700 dark:text-orange-300">Perlu penanganan dalam 2-3 hari</p>
                 </div>
                 
-                <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl">
-                  <span className="text-2xl">🔴</span>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-red-800 dark:text-red-200 mb-1">Tinggi</h4>
-                    <p className="text-sm text-red-700 dark:text-red-300">Sangat mendesak, perlu ditangani dalam 24 jam</p>
-                  </div>
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl">
+                  <h4 className="font-bold text-red-800 dark:text-red-200 mb-1">Tinggi</h4>
+                  <p className="text-sm text-red-700 dark:text-red-300">Sangat mendesak, perlu ditangani dalam 24 jam</p>
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={() => setShowPriorityTooltip(false)}
-                className="w-full mt-6 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors"
+                variant="primary"
+                fullWidth
+                className="mt-6"
               >
                 Mengerti
-              </button>
+              </Button>
             </div>
           </div>
         </div>

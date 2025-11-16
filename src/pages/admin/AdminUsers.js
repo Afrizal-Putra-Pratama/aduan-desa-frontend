@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/adminAPI';
 import Button from '../../components/common/Button';
 import Pagination from '../../components/common/Pagination';
-import { FiSearch, FiEye, FiTrash2, FiKey, FiHome, FiRefreshCw, FiUsers, FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
-import ResetPasswordModal from '../../components/ResetPasswordModal';
+import { FiSearch, FiEye, FiTrash2, FiHome, FiRefreshCw, FiUsers, FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 function AdminUsers() {
   const navigate = useNavigate();
@@ -18,9 +17,7 @@ function AdminUsers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  const [showResetModal, setShowResetModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
   const searchInput = useRef();
@@ -29,17 +26,20 @@ function AdminUsers() {
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+useEffect(() => {
+  fetchUsers();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-      fetchUsers(search);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [search]);
+useEffect(() => {
+  const timeoutId = setTimeout(() => {
+    setCurrentPage(1);
+    fetchUsers(search);
+  }, 500);
+  return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [search]);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -106,18 +106,6 @@ function AdminUsers() {
     } else {
       setError('Gagal menghapus user: ' + response.message);
     }
-  };
-
-  const handleResetPassword = (user) => {
-    setSelectedUser(user);
-    setShowResetModal(true);
-  };
-
-  const handleResetSuccess = () => {
-    setShowResetModal(false);
-    setSelectedUser(null);
-    setSuccess('Password berhasil direset!');
-    setTimeout(() => setSuccess(''), 3000);
   };
 
   const handlePageChange = (page) => {
@@ -206,7 +194,7 @@ function AdminUsers() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Cari nama, email, atau telepon..."
+                placeholder="Cari nama atau telepon..."
                 className="w-full pl-10 pr-10 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition"
               />
               {!!search && (
@@ -263,7 +251,6 @@ function AdminUsers() {
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">ID</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nama</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Telepon</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Pengaduan</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Bergabung</th>
@@ -278,9 +265,6 @@ function AdminUsers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-bold text-slate-800 dark:text-slate-100">{user.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                        {user.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
                         {user.phone || '-'}
@@ -304,13 +288,6 @@ function AdminUsers() {
                             title="Lihat Detail"
                           >
                             <FiEye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleResetPassword(user)}
-                            className="p-2 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-700 dark:text-green-400 rounded-lg transition-colors"
-                            title="Reset Password"
-                          >
-                            <FiKey size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteAttempt(user)}
@@ -370,8 +347,8 @@ function AdminUsers() {
                   <span className="font-bold text-slate-800 dark:text-slate-100">{userToDelete.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Email:</span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">{userToDelete.email}</span>
+                  <span className="text-slate-600 dark:text-slate-400">Telepon:</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{userToDelete.phone || '-'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600 dark:text-slate-400">Total Pengaduan:</span>
@@ -409,15 +386,6 @@ function AdminUsers() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Reset Password Modal */}
-      {showResetModal && selectedUser && (
-        <ResetPasswordModal
-          user={selectedUser}
-          onClose={() => { setShowResetModal(false); setSelectedUser(null); }}
-          onSuccess={handleResetSuccess}
-        />
       )}
     </div>
   );

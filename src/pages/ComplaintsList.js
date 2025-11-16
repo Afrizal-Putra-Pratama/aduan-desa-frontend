@@ -3,7 +3,30 @@ import { useNavigate } from 'react-router-dom';
 import { complaintsAPI, categoriesAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import StatusBadge from '../components/common/StatusBadge';
-import { FiArrowLeft, FiClock, FiMapPin, FiAlertCircle, FiSearch, FiFilter, FiFolder, FiUser } from 'react-icons/fi';
+import { FiArrowLeft, FiClock, FiMapPin, FiAlertCircle, FiSearch, FiFilter, FiFolder, FiPlus } from 'react-icons/fi';
+
+// ✅ Skeleton Loading Component
+const ComplaintCardSkeleton = () => (
+  <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 animate-pulse">
+    <div className="flex items-center justify-between mb-3">
+      <div className="h-6 w-32 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+    </div>
+    <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-700 rounded mb-3"></div>
+    <div className="flex items-center gap-2 mb-4">
+      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+      <div className="h-6 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+    </div>
+    <div className="space-y-2 mb-4">
+      <div className="h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+      <div className="h-4 w-5/6 bg-slate-200 dark:bg-slate-700 rounded"></div>
+      <div className="h-4 w-4/6 bg-slate-200 dark:bg-slate-700 rounded"></div>
+    </div>
+    <div className="pt-4 border-t border-slate-200 dark:border-slate-700 space-y-2.5">
+      <div className="h-4 w-40 bg-slate-200 dark:bg-slate-700 rounded"></div>
+      <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded"></div>
+    </div>
+  </div>
+);
 
 function ComplaintsList() {
   const navigate = useNavigate();
@@ -65,7 +88,7 @@ function ComplaintsList() {
   const fetchCategories = async () => {
     const response = await categoriesAPI.getList();
     if (response.success) {
-      setCategories(response.data);
+      setCategories(response.data || response.categories || []);
     }
   };
 
@@ -115,20 +138,9 @@ function ComplaintsList() {
       medium: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
       high: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
     };
-    const labels = { low: '🟢 Rendah', medium: '🟡 Sedang', high: '🔴 Tinggi' };
+    const labels = { low: 'Rendah', medium: 'Sedang', high: 'Tinggi' };
     return <span className={`px-2 py-1 rounded-full text-xs font-semibold ${badges[priority]}`}>{labels[priority]}</span>;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-slate-200 dark:border-slate-700 border-t-indigo-600 mb-4"></div>
-          <p className="text-xl font-semibold text-slate-700 dark:text-slate-300">Memuat pengaduan...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
@@ -150,79 +162,103 @@ function ComplaintsList() {
             <p className="text-lg text-slate-600 dark:text-slate-400">Kelola dan pantau status pengaduan Anda</p>
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-full">
               <div className="w-2 h-2 bg-indigo-600 dark:bg-indigo-400 rounded-full"></div>
-              <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{filteredComplaints.length} Pengaduan</span>
+              <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
+                {loading ? '...' : `${filteredComplaints.length} Pengaduan`}
+              </span>
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-start gap-3">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
             <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5" size={20} />
             <span className="text-red-800 dark:text-red-300 font-medium">{error}</span>
           </div>
         )}
 
-        <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 mb-6 transition-colors">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
-              <FiFilter className="text-indigo-600 dark:text-indigo-400" size={20} />
+        {!loading && (
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 mb-6 transition-colors">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center">
+                <FiFilter className="text-indigo-600 dark:text-indigo-400" size={20} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Filter & Pencarian</h3>
             </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Filter & Pencarian</h3>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Cari Pengaduan</label>
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari judul atau deskripsi..." className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Cari Pengaduan</label>
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Cari judul atau deskripsi..." className="w-full pl-11 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Kategori</label>
+                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
+                  <option value="all">Semua Kategori</option>
+                  {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Status</label>
+                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
+                  <option value="all">Semua Status</option>
+                  <option value="pending">Menunggu</option>
+                  <option value="in_progress">Diproses</option>
+                  <option value="completed">Selesai</option>
+                  <option value="rejected">Ditolak</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Urutkan</label>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
+                  <option value="newest">Terbaru</option>
+                  <option value="oldest">Terlama</option>
+                </select>
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Kategori</label>
-              <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
-                <option value="all">Semua Kategori</option>
-                {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Status</label>
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
-                <option value="all">Semua Status</option>
-                <option value="pending">Menunggu</option>
-                <option value="in_progress">Diproses</option>
-                <option value="completed">Selesai</option>
-                <option value="rejected">Ditolak</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Urutkan</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full pl-4 pr-10 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none cursor-pointer" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem'}}>
-                <option value="newest">Terbaru</option>
-                <option value="oldest">Terlama</option>
-              </select>
-            </div>
+            {(searchQuery || filterCategory !== 'all' || filterStatus !== 'all' || sortBy !== 'newest') && (
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <span className="text-sm text-slate-600 dark:text-slate-400">
+                  Menampilkan <strong className="text-indigo-600 dark:text-indigo-400">{filteredComplaints.length}</strong> dari <strong>{complaints.length}</strong> pengaduan
+                </span>
+                <Button onClick={resetFilters} variant="danger" size="sm">Reset Filter</Button>
+              </div>
+            )}
           </div>
-          
-          {(searchQuery || filterCategory !== 'all' || filterStatus !== 'all' || sortBy !== 'newest') && (
-            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                Menampilkan <strong className="text-indigo-600 dark:text-indigo-400">{filteredComplaints.length}</strong> dari <strong>{complaints.length}</strong> pengaduan
-              </span>
-              <Button onClick={resetFilters} variant="danger" size="sm">Reset Filter</Button>
-            </div>
-          )}
-        </div>
+        )}
 
-        {filteredComplaints.length === 0 ? (
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[...Array(6)].map((_, i) => (
+              <ComplaintCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : filteredComplaints.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-12 text-center transition-colors">
-            <div className="text-6xl mb-4">{searchQuery || filterCategory !== 'all' || filterStatus !== 'all' ? '🔍' : '📭'}</div>
-            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">{searchQuery || filterCategory !== 'all' || filterStatus !== 'all' ? 'Tidak Ada Hasil' : 'Belum Ada Pengaduan'}</h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">{searchQuery || filterCategory !== 'all' || filterStatus !== 'all' ? 'Tidak ada pengaduan yang cocok dengan filter Anda.' : 'Anda belum membuat pengaduan. Buat pengaduan pertama Anda sekarang!'}</p>
-            <Button onClick={(searchQuery || filterCategory !== 'all' || filterStatus !== 'all') ? resetFilters : () => navigate('/complaints/create')} variant="primary">{(searchQuery || filterCategory !== 'all' || filterStatus !== 'all') ? 'Reset Filter' : 'Buat Pengaduan Baru'}</Button>
+            <div className="w-32 h-32 mx-auto mb-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
+              <div className="text-6xl">{searchQuery || filterCategory !== 'all' || filterStatus !== 'all' ? '🔍' : '📭'}</div>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+              {searchQuery || filterCategory !== 'all' || filterStatus !== 'all' ? 'Tidak Ada Hasil' : 'Belum Ada Pengaduan'}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto">
+              {searchQuery || filterCategory !== 'all' || filterStatus !== 'all' 
+                ? 'Tidak ada pengaduan yang cocok dengan filter Anda. Coba ubah filter atau reset pencarian.' 
+                : 'Anda belum membuat pengaduan. Buat pengaduan pertama Anda sekarang untuk melaporkan masalah di desa!'}
+            </p>
+            <Button 
+              onClick={(searchQuery || filterCategory !== 'all' || filterStatus !== 'all') ? resetFilters : () => navigate('/complaints/create')} 
+              variant="primary"
+              icon={!(searchQuery || filterCategory !== 'all' || filterStatus !== 'all') && <FiPlus />}
+            >
+              {(searchQuery || filterCategory !== 'all' || filterStatus !== 'all') ? 'Reset Filter' : 'Buat Pengaduan Baru'}
+            </Button>
           </div>
         ) : (
           <>

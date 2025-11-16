@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/apiService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/common/Toast';
 import Button from '../components/common/Button';
-import { FiUser, FiPhone, FiAlertCircle } from 'react-icons/fi';
+import { FiUser, FiPhone, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import ThemeToggle from '../components/common/ThemeToggle';
 
 function Login() {
@@ -18,9 +19,11 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+  const toast = useToast();
 
-  // ✅ LOAD SAVED CREDENTIALS ON MOUNT
+  // ✅ LOAD SAVED CREDENTIALS ON MOUNT (No Toast)
   useEffect(() => {
     const savedUsername = localStorage.getItem('remembered_username');
     const savedPhone = localStorage.getItem('remembered_phone');
@@ -32,6 +35,23 @@ function Login() {
       console.log('✅ Loaded saved credentials');
     }
   }, []);
+
+  // ✅ HANDLE SUCCESS MESSAGE FROM REGISTER
+  useEffect(() => {
+    if (location.state?.registrationSuccess) {
+      const { username: regUsername, phone: regPhone } = location.state;
+      
+      // Set username dan phone dari register
+      if (regUsername) setUsername(regUsername);
+      if (regPhone) setPhone(regPhone);
+      
+      // Show success message
+      toast.success('Registrasi berhasil! Silakan login untuk verifikasi nomor HP');
+      
+      // Clear state agar tidak muncul lagi saat refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate, toast]);
 
   // Validasi No HP
   const validatePhone = (phoneNumber) => {
@@ -53,7 +73,52 @@ function Login() {
     if (value === '' || /^\d+$/.test(value)) {
       if (value.length <= 13) {
         setPhone(value);
+        // Clear OTP saat phone berubah
+        if (otpSent) {
+          setOtpSent(false);
+          setOtp('');
+        }
       }
+    }
+  };
+
+  // Handle Username Change
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value);
+    // Clear OTP saat username berubah
+    if (otpSent) {
+      setOtpSent(false);
+      setOtp('');
+    }
+    setError('');
+  };
+
+  // ✅ Handle OTP Input + Auto-paste
+  const handleOTPChange = (e) => {
+    const value = e.target.value;
+    
+    // Allow only numbers
+    if (value === '' || /^\d+$/.test(value)) {
+      if (value.length <= 6) {
+        setOtp(value);
+        setError('');
+      }
+    }
+  };
+
+  // ✅ Handle Paste Event (Auto-paste OTP dari clipboard) - NO TOAST
+  const handleOTPPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text');
+    
+    // Extract only numbers from pasted text
+    const numbers = pastedData.replace(/\D/g, '');
+    
+    if (numbers.length > 0) {
+      const otpValue = numbers.substring(0, 6);
+      setOtp(otpValue);
+      setError('');
+      console.log('✅ OTP pasted:', otpValue);
     }
   };
 
@@ -61,17 +126,20 @@ function Login() {
   const handleSendOTP = async () => {
     if (!username.trim()) {
       setError('Username wajib diisi');
+      toast.error('Username wajib diisi');
       return;
     }
 
     if (!phone.trim()) {
       setError('Nomor HP wajib diisi');
+      toast.error('Nomor HP wajib diisi');
       return;
     }
 
     const phoneError = validatePhone(phone);
     if (phoneError) {
       setError(phoneError);
+      toast.error('❌ ' + phoneError);
       return;
     }
 
@@ -79,17 +147,20 @@ function Login() {
     setLoadingOTP(true);
 
     try {
-      // ✅ KIRIM USERNAME DAN PHONE (backend akan validasi match)
       const response = await authAPI.loginRequestOTP(username, phone);
 
       if (response.success) {
         setOtpSent(true);
+        setOtp('');
         setError('');
+        toast.success('Kode OTP berhasil dikirim ke WhatsApp Anda');
       } else {
         setError(response.message);
+        toast.error('❌ ' + response.message);
       }
     } catch (error) {
-      setError('Gagal mengirim OTP');
+      setError('Gagal mengirim OTP. Silakan coba lagi.');
+      toast.error('Gagal mengirim OTP. Silakan coba lagi.');
     } finally {
       setLoadingOTP(false);
     }
@@ -102,33 +173,36 @@ function Login() {
 
     if (!username.trim()) {
       setError('Username wajib diisi');
+      toast.error('Username wajib diisi');
       return;
     }
 
     if (!phone.trim()) {
       setError('Nomor HP wajib diisi');
+      toast.error('Nomor HP wajib diisi');
       return;
     }
 
     const phoneError = validatePhone(phone);
     if (phoneError) {
       setError(phoneError);
+      toast.error('❌ ' + phoneError);
       return;
     }
 
     if (!otp.trim() || otp.length !== 6) {
       setError('Kode OTP harus 6 digit');
+      toast.error('Kode OTP harus 6 digit');
       return;
     }
 
     setLoadingLogin(true);
 
     try {
-      // ✅ KIRIM USERNAME, PHONE, DAN OTP (backend akan validasi match)
       const response = await authAPI.loginVerifyOTP(username, phone, otp);
 
       if (response.success) {
-        // ✅ SAVE CREDENTIALS IF REMEMBER ME CHECKED
+        // Save credentials if remember me checked
         if (rememberMe) {
           localStorage.setItem('remembered_username', username);
           localStorage.setItem('remembered_phone', phone);
@@ -147,13 +221,22 @@ function Login() {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(userData));
         
+        toast.success('Login berhasil! Selamat datang ' + userData.name);
+        
         login(userData, response.token);
-        navigate('/dashboard');
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
       } else {
         setError(response.message);
+        toast.error('❌ ' + response.message);
+        setOtp('');
       }
     } catch (error) {
-      setError('Terjadi kesalahan');
+      setError('Terjadi kesalahan. Silakan coba lagi.');
+      toast.error('Terjadi kesalahan. Silakan coba lagi.');
+      setOtp('');
     } finally {
       setLoadingLogin(false);
     }
@@ -176,8 +259,9 @@ function Login() {
         </div>
 
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 transition-colors">
+          {/* Error Alert (Fallback) */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
               <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
               <p className="text-sm text-red-800 dark:text-red-200 font-medium">
                 {error}
@@ -185,11 +269,20 @@ function Login() {
             </div>
           )}
 
+          {/* OTP Sent Success (Visual Feedback) */}
           {otpSent && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-              <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                ✓ Kode OTP telah dikirim ke WhatsApp Anda
-              </p>
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl animate-fadeIn">
+              <div className="flex items-start gap-3">
+                <FiCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" size={20} />
+                <div>
+                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                    Kode OTP telah dikirim ke WhatsApp Anda
+                  </p>
+                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                    Periksa pesan WhatsApp Anda untuk mendapatkan kode 6 digit
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -206,13 +299,10 @@ function Login() {
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setOtpSent(false);
-                    setError('');
-                  }}
+                  onChange={handleUsernameChange}
                   placeholder="Masukkan username Anda"
-                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                  disabled={loadingOTP || loadingLogin}
+                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -236,17 +326,23 @@ function Login() {
                     onChange={handlePhoneChange}
                     placeholder="08123456789"
                     maxLength={13}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
+                    disabled={loadingOTP || loadingLogin}
+                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleSendOTP}
-                  disabled={loadingOTP || !username.trim() || !phone.trim()}
-                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white font-semibold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 text-sm"
+                  disabled={loadingOTP || loadingLogin || !username.trim() || !phone.trim()}
+                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white font-semibold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 text-sm shadow-md hover:shadow-lg active:scale-95"
                 >
-                  {loadingOTP ? 'Mengirim...' : otpSent ? 'Kirim Ulang' : 'Kirim OTP'}
+                  {loadingOTP ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Mengirim...
+                    </span>
+                  ) : otpSent ? 'Kirim Ulang' : 'Kirim OTP'}
                 </button>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
@@ -254,7 +350,7 @@ function Login() {
               </p>
             </div>
 
-            {/* OTP Input */}
+            {/* OTP Input with Auto-paste */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
                 Kode OTP
@@ -264,20 +360,17 @@ function Login() {
                 inputMode="numeric"
                 pattern="\d*"
                 value={otp}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d+$/.test(value)) {
-                    setOtp(value);
-                  }
-                }}
+                onChange={handleOTPChange}
+                onPaste={handleOTPPaste}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-center text-xl font-mono tracking-[0.5em]"
+                disabled={!otpSent || loadingLogin}
+                className="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-center text-xl font-mono tracking-[0.5em] disabled:opacity-50 disabled:cursor-not-allowed"
                 required
               />
               {otpSent && (
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-                  Masukkan kode 6 digit dari WhatsApp
+                  Masukkan atau tempel kode 6 digit dari WhatsApp
                 </p>
               )}
             </div>
@@ -289,7 +382,8 @@ function Login() {
                 id="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                disabled={loadingLogin}
+                className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               />
               <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
                 Ingat username dan nomor HP saya
@@ -303,9 +397,9 @@ function Login() {
               fullWidth
               size="lg"
               loading={loadingLogin}
-              disabled={!otp || otp.length !== 6}
+              disabled={!otpSent || !otp || otp.length !== 6}
             >
-              {loadingLogin ? 'Memverifikasi...' : 'Masuk'}
+              Masuk
             </Button>
           </form>
 
