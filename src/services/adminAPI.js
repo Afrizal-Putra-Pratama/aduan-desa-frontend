@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://econometric-unvicariously-anjelica.ngrok-free.dev ';
 
 export const adminAPI = {
   // Login admin

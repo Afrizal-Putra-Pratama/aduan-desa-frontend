@@ -21,13 +21,19 @@ export const AdminAuthProvider = ({ children }) => {
     if (storedToken && storedAdmin) {
       setToken(storedToken);
       setAdmin(JSON.parse(storedAdmin));
+      console.log('✅ Admin session restored');
     }
     setLoading(false);
   }, []);
 
   const saveFCMToken = async (fcmToken) => {
     try {
-      const response = await fetch('http://localhost/aduan-desa/api/admin/save-fcm-token.php', {
+      // ✅ Update URL untuk production (pakai Ngrok kalau testing dari HP)
+      const apiUrl = 'http://localhost/aduan-desa/api/admin/save-fcm-token.php';
+      // Untuk testing dari HP, ganti jadi:
+      // const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/admin/save-fcm-token.php';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +58,7 @@ export const AdminAuthProvider = ({ children }) => {
   };
 
   const login = async (adminData, adminToken) => {
-    console.log('🔐 Admin login...');
+    console.log('🔐 Admin login...', adminData.username);
     
     setAdmin(adminData);
     setToken(adminToken);
@@ -67,7 +73,7 @@ export const AdminAuthProvider = ({ children }) => {
         const fcmToken = await requestNotificationPermission();
         
         if (fcmToken) {
-          console.log('🔑 Admin FCM Token received');
+          console.log('🔑 Admin FCM Token received:', fcmToken.substring(0, 30) + '...');
           await saveFCMToken(fcmToken);
         }
       } catch (error) {
@@ -77,14 +83,34 @@ export const AdminAuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log('🚪 Admin logout');
+    console.log('🚪 Admin logout:', admin?.username);
     
+    // ✅ SAVE REMEMBER ME DATA BEFORE LOGOUT (JIKA ADA)
+    const savedUsername = localStorage.getItem('admin_remembered_username');
+    const savedPassword = localStorage.getItem('admin_remembered_password');
+    
+    console.log('💾 Preserving remember me data:', { 
+      username: savedUsername ? '✅' : '❌',
+      password: savedPassword ? '✅' : '❌'
+    });
+    
+    // Clear auth data
     setAdmin(null);
     setToken(null);
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_data');
     
-    console.log('✅ Admin logged out');
+    // ✅ RESTORE REMEMBER ME DATA AFTER LOGOUT
+    if (savedUsername) {
+      localStorage.setItem('admin_remembered_username', savedUsername);
+      console.log('✅ Username preserved:', savedUsername);
+    }
+    if (savedPassword) {
+      localStorage.setItem('admin_remembered_password', savedPassword);
+      console.log('✅ Password preserved');
+    }
+    
+    console.log('✅ Admin logged out - Remember me data preserved');
   };
 
   return (
