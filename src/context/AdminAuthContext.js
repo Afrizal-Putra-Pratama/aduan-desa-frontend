@@ -26,18 +26,21 @@ export const AdminAuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // ✅ UPDATED: Pakai Ngrok URL
   const saveFCMToken = async (fcmToken) => {
     try {
-      // ✅ Update URL untuk production (pakai Ngrok kalau testing dari HP)
-      const apiUrl = 'http://localhost/aduan-desa/api/admin/save-fcm-token.php';
-      // Untuk testing dari HP, ganti jadi:
-      // const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/admin/save-fcm-token.php';
+      // ✅ Ganti ke Ngrok URL agar bisa diakses dari HP
+      const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/admin/save-fcm-token.php';
+      
+      console.log('💾 Saving Admin FCM token to:', apiUrl);
+      console.log('🔑 Admin FCM Token (preview):', fcmToken.substring(0, 30) + '...');
       
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ Skip ngrok warning
         },
         body: JSON.stringify({ 
           fcm_token: fcmToken,
@@ -46,6 +49,7 @@ export const AdminAuthProvider = ({ children }) => {
       });
       
       const result = await response.json();
+      console.log('💾 Admin FCM response:', result);
       
       if (result.success) {
         console.log('✅ Admin FCM token saved');
@@ -70,11 +74,14 @@ export const AdminAuthProvider = ({ children }) => {
     // Request notification permission
     setTimeout(async () => {
       try {
+        console.log('🔔 Requesting admin notification permission...');
         const fcmToken = await requestNotificationPermission();
         
         if (fcmToken) {
           console.log('🔑 Admin FCM Token received:', fcmToken.substring(0, 30) + '...');
           await saveFCMToken(fcmToken);
+        } else {
+          console.log('⚠️ Admin denied notification permission or no token available');
         }
       } catch (error) {
         console.error('❌ Error requesting admin notification permission:', error);
@@ -85,11 +92,11 @@ export const AdminAuthProvider = ({ children }) => {
   const logout = () => {
     console.log('🚪 Admin logout:', admin?.username);
     
-    // ✅ SAVE REMEMBER ME DATA BEFORE LOGOUT (JIKA ADA)
+    // ✅ SAVE REMEMBER ME DATA BEFORE LOGOUT
     const savedUsername = localStorage.getItem('admin_remembered_username');
     const savedPassword = localStorage.getItem('admin_remembered_password');
     
-    console.log('💾 Preserving remember me data:', { 
+    console.log('💾 Preserving admin remember me data:', { 
       username: savedUsername ? '✅' : '❌',
       password: savedPassword ? '✅' : '❌'
     });
@@ -103,11 +110,11 @@ export const AdminAuthProvider = ({ children }) => {
     // ✅ RESTORE REMEMBER ME DATA AFTER LOGOUT
     if (savedUsername) {
       localStorage.setItem('admin_remembered_username', savedUsername);
-      console.log('✅ Username preserved:', savedUsername);
+      console.log('✅ Admin username preserved:', savedUsername);
     }
     if (savedPassword) {
       localStorage.setItem('admin_remembered_password', savedPassword);
-      console.log('✅ Password preserved');
+      console.log('✅ Admin password preserved');
     }
     
     console.log('✅ Admin logged out - Remember me data preserved');

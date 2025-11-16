@@ -45,8 +45,6 @@ export const AuthProvider = ({ children }) => {
             setUser(parsedUser);
           } else {
             console.warn('⚠️ Token mismatch on load - clearing session');
-            console.warn('Token user_id:', tokenUserId);
-            console.warn('Stored user_id:', storedUserId);
             
             // ✅ Save remember me data before clear
             const savedUsername = localStorage.getItem('remembered_username');
@@ -94,19 +92,27 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Function untuk simpan FCM token ke backend
+  // ✅ UPDATED: Function untuk simpan FCM token ke backend (pakai Ngrok URL)
   const saveFCMToken = async (fcmToken) => {
     try {
-      const response = await fetch('http://localhost/aduan-desa/api/users/save-fcm-token.php', {
+      // ✅ Pakai Ngrok URL agar bisa diakses dari HP
+      const apiUrl = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api/users/save-fcm-token.php';
+      
+      console.log('💾 Saving FCM token to:', apiUrl);
+      console.log('🔑 FCM Token (preview):', fcmToken.substring(0, 30) + '...');
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'ngrok-skip-browser-warning': '69420' // ✅ Skip ngrok warning
         },
         body: JSON.stringify({ fcm_token: fcmToken })
       });
       
       const result = await response.json();
+      console.log('💾 Save FCM response:', result);
       
       if (result.success) {
         console.log('✅ FCM token saved successfully');
@@ -132,6 +138,7 @@ export const AuthProvider = ({ children }) => {
     // 🔔 Request notification permission & save FCM token
     setTimeout(async () => {
       try {
+        console.log('🔔 Requesting notification permission...');
         const fcmToken = await requestNotificationPermission();
         
         if (fcmToken) {
