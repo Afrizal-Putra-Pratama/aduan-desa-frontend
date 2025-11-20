@@ -1,25 +1,23 @@
 {
   "short_name": "Aduan Desa",
   "name": "Sistem Aduan Desa Wonokerso",
-  "description": "Platform pengaduan masyarakat untuk melaporkan keluhan dan masalah di Desa Wonokerso",
+  "description": "Platform pengaduan masyarakat Desa Wonokerso",
   "icons": [
-    {
-      "src": "logo-wonokerso.svg",
-      "type": "image/svg+xml",
-      "sizes": "any",
-      "purpose": "any maskable"
-    },
     {
       "src": "logo-192.png",
       "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any"
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     },
     {
       "src": "logo-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any"
+      "purpose": "maskable"
     }
   ],
   "start_url": ".",
