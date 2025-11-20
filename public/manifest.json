@@ -1,28 +1,22 @@
 {
   "short_name": "Aduan Desa",
   "name": "Sistem Aduan Desa Wonokerso",
-  "description": "Platform pengaduan masyarakat Desa Wonokerso",
   "icons": [
     {
       "src": "logo-192.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "logo-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any"
     }
   ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#4F46E5",
-  "background_color": "#ffffff",
-  "orientation": "portrait"
+  "background_color": "#ffffff"
 }
