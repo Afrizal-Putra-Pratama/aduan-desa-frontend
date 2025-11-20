@@ -25,11 +25,11 @@ function NotificationBell() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
-    // Auto refresh every 5 seconds
+    // Auto refresh every 30 seconds
     const interval = setInterval(() => {
       console.log('⏱️ Auto-refresh notifications...');
       fetchNotifications();
-    }, 5000);
+    }, 30000);
     
     // Refresh saat window kembali focus
     const handleFocus = () => {

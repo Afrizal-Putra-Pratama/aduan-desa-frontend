@@ -6,6 +6,7 @@ import { useToast } from '../components/common/Toast';
 import Button from '../components/common/Button';
 import { FiUser, FiPhone, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import ThemeToggle from '../components/common/ThemeToggle';
+import logoWonokerso from '../assets/logo-wonokerso.svg';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -249,172 +250,189 @@ function Login() {
       </div>
 
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Sistem Aduan Desa
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Desa Wonokerso
+        <div className="text-center mb-4">
+  {/* Logo - Compact & Adaptive */}
+  <div className="flex justify-center mb-3">
+    <div className="flex justify-center mb-3">
+  <img 
+    src={logoWonokerso} 
+    alt="Logo Desa Wonokerso"
+    className="w-16 h-16 object-contain drop-shadow-lg"
+  />
+</div>
+
+  </div>
+  
+  <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+    Sistem Aduan Desa
+  </h1>
+  <p className="text-xs text-slate-600 dark:text-slate-400">
+    Desa Wonokerso
+  </p>
+</div>
+
+
+
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 sm:p-8 transition-colors">
+  {/* Error Alert (Fallback) */}
+  {error && (
+    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-2 animate-fadeIn">
+      <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={18} />
+      <p className="text-xs sm:text-sm text-red-800 dark:text-red-200 font-medium">
+        {error}
+      </p>
+    </div>
+  )}
+
+  {/* OTP Sent Success (Visual Feedback) */}
+  {otpSent && (
+    <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl animate-fadeIn">
+      <div className="flex items-start gap-2">
+        <FiCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" size={18} />
+        <div>
+          <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 font-medium">
+            Kode OTP telah dikirim ke WhatsApp Anda
+          </p>
+          <p className="text-xs text-green-700 dark:text-green-300 mt-0.5">
+            Periksa pesan WhatsApp untuk kode 6 digit
           </p>
         </div>
+      </div>
+    </div>
+  )}
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8 transition-colors">
-          {/* Error Alert (Fallback) */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
-              <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
-              <p className="text-sm text-red-800 dark:text-red-200 font-medium">
-                {error}
-              </p>
-            </div>
-          )}
-
-          {/* OTP Sent Success (Visual Feedback) */}
-          {otpSent && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl animate-fadeIn">
-              <div className="flex items-start gap-3">
-                <FiCheckCircle className="text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" size={20} />
-                <div>
-                  <p className="text-sm text-green-800 dark:text-green-200 font-medium">
-                    Kode OTP telah dikirim ke WhatsApp Anda
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    Periksa pesan WhatsApp Anda untuk mendapatkan kode 6 digit
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username Input */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
-                  <FiUser size={18} />
-                </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={handleUsernameChange}
-                  placeholder="Masukkan username Anda"
-                  disabled={loadingOTP || loadingLogin}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* No HP Input + Button Kirim OTP */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
-                Nomor HP
-              </label>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
-                    <FiPhone size={18} />
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="\d*"
-                    value={phone}
-                    onChange={handlePhoneChange}
-                    placeholder="08123456789"
-                    maxLength={13}
-                    disabled={loadingOTP || loadingLogin}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    required
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSendOTP}
-                  disabled={loadingOTP || loadingLogin || !username.trim() || !phone.trim()}
-                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white font-semibold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 text-sm shadow-md hover:shadow-lg active:scale-95"
-                >
-                  {loadingOTP ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Mengirim...
-                    </span>
-                  ) : otpSent ? 'Kirim Ulang' : 'Kirim OTP'}
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                Format: 08xxxxxxxxxx (10-13 digit)
-              </p>
-            </div>
-
-            {/* OTP Input with Auto-paste */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-white mb-2">
-                Kode OTP
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="\d*"
-                value={otp}
-                onChange={handleOTPChange}
-                onPaste={handleOTPPaste}
-                maxLength={6}
-                placeholder="000000"
-                disabled={!otpSent || loadingLogin}
-                className="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-center text-xl font-mono tracking-[0.5em] disabled:opacity-50 disabled:cursor-not-allowed"
-                required
-              />
-              {otpSent && (
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-                  Masukkan atau tempel kode 6 digit dari WhatsApp
-                </p>
-              )}
-            </div>
-
-            {/* Remember Me Checkbox */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                disabled={loadingLogin}
-                className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
-                Ingat username dan nomor HP saya
-              </label>
-            </div>
-
-            {/* Button Masuk */}
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              size="lg"
-              loading={loadingLogin}
-              disabled={!otpSent || !otp || otp.length !== 6}
-            >
-              Masuk
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-center text-sm text-slate-600 dark:text-slate-400">
-              Belum punya akun?{' '}
-              <Link 
-                to="/register" 
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold transition-colors"
-              >
-                Daftar sekarang
-              </Link>
-            </p>
-          </div>
+  <form onSubmit={handleSubmit} className="space-y-4">
+    {/* Username Input */}
+    <div>
+      <label className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-white mb-1.5">
+        Username
+      </label>
+      <div className="relative">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+          <FiUser size={16} />
         </div>
+        <input
+          type="text"
+          value={username}
+          onChange={handleUsernameChange}
+          placeholder="Masukkan username Anda"
+          disabled={loadingOTP || loadingLogin}
+          className="w-full pl-9 pr-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          required
+        />
+      </div>
+    </div>
+
+    {/* No HP Input + Button Kirim OTP */}
+    <div>
+      <label className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-white mb-1.5">
+        Nomor HP
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+            <FiPhone size={16} />
+          </div>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
+            value={phone}
+            onChange={handlePhoneChange}
+            placeholder="08123456789"
+            maxLength={13}
+            disabled={loadingOTP || loadingLogin}
+            className="w-full pl-9 pr-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            required
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleSendOTP}
+          disabled={loadingOTP || loadingLogin || !username.trim() || !phone.trim()}
+          className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 text-white text-sm font-semibold rounded-xl transition-all disabled:cursor-not-allowed disabled:opacity-50 shadow-md hover:shadow-lg active:scale-95"
+        >
+          {loadingOTP ? (
+            <span className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Mengirim...
+            </span>
+          ) : otpSent ? 'Kirim Ulang' : 'Kirim OTP'}
+        </button>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+        Format: 08xxxxxxxxxx (10-13 digit)
+      </p>
+    </div>
+
+    {/* OTP Input with Auto-paste */}
+    <div>
+      <label className="block text-xs sm:text-sm font-semibold text-slate-700 dark:text-white mb-1.5">
+        Kode OTP
+      </label>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="\d*"
+        value={otp}
+        onChange={handleOTPChange}
+        onPaste={handleOTPPaste}
+        maxLength={6}
+        placeholder="000000"
+        disabled={!otpSent || loadingLogin}
+        className="w-full px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all text-center font-mono tracking-[0.5em] disabled:opacity-50 disabled:cursor-not-allowed"
+        required
+      />
+      {otpSent && (
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 text-center">
+          Masukkan atau tempel kode 6 digit dari WhatsApp
+        </p>
+      )}
+    </div>
+
+    {/* Remember Me Checkbox */}
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        id="rememberMe"
+        checked={rememberMe}
+        onChange={(e) => setRememberMe(e.target.checked)}
+        disabled={loadingLogin}
+        className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+      />
+      <label htmlFor="rememberMe" className="ml-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+        Ingat username dan nomor HP saya
+      </label>
+    </div>
+
+    {/* Button Masuk */}
+    <div className="pt-2">
+      <Button
+        type="submit"
+        variant="primary"
+        fullWidth
+        size="lg"
+        loading={loadingLogin}
+        disabled={!otpSent || !otp || otp.length !== 6}
+      >
+        Masuk
+      </Button>
+    </div>
+  </form>
+
+  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+    <p className="text-center text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+      Belum punya akun?{' '}
+      <Link 
+        to="/register" 
+        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold transition-colors"
+      >
+        Daftar sekarang
+      </Link>
+    </p>
+  </div>
+</div>
+
 
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-500 dark:text-slate-500">

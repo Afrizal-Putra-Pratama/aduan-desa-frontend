@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+
 import { profileAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import { FiArrowLeft, FiUser, FiPhone, FiAlertCircle, FiCheckCircle, FiX } from 'react-icons/fi';
@@ -258,7 +258,7 @@ function Profile() {
         {/* Info Box */}
         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 transition-colors">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>💡 Info:</strong> Anda login menggunakan nomor telepon tanpa password. Pastikan nomor telepon selalu aktif untuk verifikasi.
+            <strong>Info:</strong> Anda login menggunakan nomor telepon tanpa password. Pastikan nomor telepon selalu aktif untuk verifikasi.
           </p>
         </div>
       </div>

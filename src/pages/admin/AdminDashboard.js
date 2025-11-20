@@ -5,6 +5,7 @@ import Button from '../../components/common/Button';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import { FiLogOut, FiUsers, FiFileText, FiClock, FiCheckCircle, FiAlertCircle, FiMap, FiGrid, FiRefreshCw, FiXCircle, FiEye, FiFilter, FiBell, FiX } from 'react-icons/fi';
 import AdminDashboardChart from '../../components/AdminDashboardChart';
+import logoWonokerso from '../../assets/logo-wonokerso.svg';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -20,7 +21,6 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // ✅ Logout modal states
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -57,24 +57,20 @@ function AdminDashboard() {
     }
   };
 
-  // ✅ Show logout confirmation modal
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
 
-  // ✅ Confirm and execute logout
   const confirmLogout = () => {
     setLoggingOut(true);
     
     setTimeout(() => {
-      // Preserve remember me data
       const savedEmail = localStorage.getItem('remembered_admin_email');
       const savedPassword = localStorage.getItem('remembered_admin_password');
       
       localStorage.removeItem('admin_token');
       localStorage.removeItem('admin_data');
       
-      // Restore remember me data
       if (savedEmail) localStorage.setItem('remembered_admin_email', savedEmail);
       if (savedPassword) localStorage.setItem('remembered_admin_password', savedPassword);
       
@@ -95,200 +91,215 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
-      {/* Navbar */}
+      {/* Navbar - Responsive dengan Logo */}
       <nav className="bg-white dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 shadow-sm transition-colors">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
-          <h1 className="text-lg md:text-xl font-bold text-slate-800 dark:text-slate-100">
-            <span className="hidden sm:inline">Admin Panel - Desa Wonokerso</span>
-            <span className="sm:hidden">Admin Panel</span>
-          </h1>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex justify-between items-center">
+          {/* LEFT: Logo + Title */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img 
+              src={logoWonokerso} 
+              alt="Logo"
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-md flex-shrink-0"
+            />
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight truncate">
+                <span className="hidden sm:inline">Admin Panel</span>
+                <span className="sm:hidden">Admin Panel</span>
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">
+                Desa Wonokerso
+              </p>
+            </div>
+          </div>
           
-          <div className="flex items-center gap-3">
+          {/* RIGHT: Theme Toggle + Logout */}
+          <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
             <button
               onClick={handleLogoutClick}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm font-medium"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm font-medium text-sm"
             >
-              <FiLogOut size={18} />
+              <FiLogOut size={16} />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Welcome Card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 md:p-8 mb-8 text-white">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+        {/* Welcome Card - Responsive */}
+        <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 mb-4 sm:mb-8 text-white">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
             Selamat Datang, {admin?.name}!
           </h2>
-          <p className="text-base md:text-lg text-indigo-100 dark:text-indigo-200">
+          <p className="text-sm sm:text-base md:text-lg text-indigo-100 dark:text-indigo-200">
             {admin?.email}
           </p>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert - Responsive */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-center justify-between shadow-sm">
-            <div className="flex items-center gap-3">
-              <FiAlertCircle className="text-red-600 dark:text-red-400" size={24} />
-              <span className="text-red-800 dark:text-red-200 font-medium">{error}</span>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <FiAlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0" size={20} />
+              <span className="text-sm sm:text-base text-red-800 dark:text-red-200 font-medium">{error}</span>
             </div>
             <Button
               onClick={fetchStats}
               variant="danger"
               size="sm"
               icon={<FiRefreshCw />}
+              className="w-full sm:w-auto"
             >
               Coba Lagi
             </Button>
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-4 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
+        {/* Stats Cards - Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-8">
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <FiFileText className="text-white" size={20} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiFileText className="text-white" size={18} />
               </div>
             </div>
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Total Aduan</p>
-            <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.total}</p>
+            <p className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{stats.total}</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-4 hover:shadow-lg hover:border-yellow-300 dark:hover:border-yellow-600 transition-all">
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg hover:border-yellow-300 dark:hover:border-yellow-600 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
-                <FiClock className="text-white" size={20} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiClock className="text-white" size={18} />
               </div>
             </div>
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Menunggu</p>
-            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">{stats.pending}</p>
+            <p className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-500">{stats.pending}</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-4 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all">
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <FiUsers className="text-white" size={20} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiUsers className="text-white" size={18} />
               </div>
             </div>
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Diproses</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.in_progress}</p>
+            <p className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.in_progress}</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-4 hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 transition-all">
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg hover:border-green-300 dark:hover:border-green-600 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                <FiCheckCircle className="text-white" size={20} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiCheckCircle className="text-white" size={18} />
               </div>
             </div>
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Selesai</p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-500">{stats.completed}</p>
+            <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-500">{stats.completed}</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-4 hover:shadow-lg hover:border-red-300 dark:hover:border-red-600 transition-all">
+          <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl shadow-md p-3 sm:p-4 hover:shadow-lg hover:border-red-300 dark:hover:border-red-600 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                <FiXCircle className="text-white" size={20} />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiXCircle className="text-white" size={18} />
               </div>
             </div>
             <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Ditolak</p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-500">{stats.rejected}</p>
+            <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-500">{stats.rejected}</p>
           </div>
         </div>
 
         {/* Chart Section */}
-        <div className="mb-8">
+        <div className="mb-4 sm:mb-8">
           <AdminDashboardChart data={chartData} stats={stats} />
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 md:p-8 mb-8 transition-colors">
-          <h3 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Menu Admin</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <button
-              onClick={() => navigate('/admin/complaints')}
-              className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 text-left"
-            >
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mb-4">
-                <FiFileText className="text-white" size={26} />
-              </div>
-              <h4 className="font-bold text-white text-lg mb-2">Kelola Pengaduan</h4>
-              <p className="text-sm text-indigo-100">Lihat dan proses semua pengaduan</p>
-            </button>
+        {/* Quick Actions - Mobile: 2 cols, Desktop: 4 cols */}
+<div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 mb-4 sm:mb-8 transition-colors">
+  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-4 sm:mb-6">Menu Admin</h3>
+  
+  {/* ✅ Mobile: grid-cols-2 (2x2), Desktop: lg:grid-cols-4 (1x4) */}
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+    <button
+      onClick={() => navigate('/admin/complaints')}
+      className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 active:scale-95 text-left"
+    >
+      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+        <FiFileText className="text-white" size={22} />
+      </div>
+      <h4 className="font-bold text-white text-base sm:text-lg mb-1 sm:mb-2">Kelola Pengaduan</h4>
+      <p className="text-xs sm:text-sm text-indigo-100">Lihat dan proses semua pengaduan</p>
+    </button>
 
-            <button
-              onClick={() => navigate('/admin/categories')}
-              className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 text-left"
-            >
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mb-4">
-                <FiGrid className="text-white" size={26} />
-              </div>
-              <h4 className="font-bold text-white text-lg mb-2">Kelola Kategori</h4>
-              <p className="text-sm text-indigo-100">Manage kategori pengaduan</p>
-            </button>
+    <button
+      onClick={() => navigate('/admin/categories')}
+      className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 active:scale-95 text-left"
+    >
+      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+        <FiGrid className="text-white" size={22} />
+      </div>
+      <h4 className="font-bold text-white text-base sm:text-lg mb-1 sm:mb-2">Kelola Kategori</h4>
+      <p className="text-xs sm:text-sm text-indigo-100">Manage kategori pengaduan</p>
+    </button>
 
-            <button
-              onClick={() => navigate('/admin/users')}
-              className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 text-left"
-            >
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mb-4">
-                <FiUsers className="text-white" size={26} />
-              </div>
-              <h4 className="font-bold text-white text-lg mb-2">Kelola User</h4>
-              <p className="text-sm text-indigo-100">Manage user & statistik</p>
-            </button>
+    <button
+      onClick={() => navigate('/admin/users')}
+      className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 active:scale-95 text-left"
+    >
+      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+        <FiUsers className="text-white" size={22} />
+      </div>
+      <h4 className="font-bold text-white text-base sm:text-lg mb-1 sm:mb-2">Kelola User</h4>
+      <p className="text-xs sm:text-sm text-indigo-100">Manage user & statistik</p>
+    </button>
 
-            <button
-              onClick={() => navigate('/admin/map')}
-              className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-2xl shadow-lg p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 text-left"
-            >
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mb-4">
-                <FiMap className="text-white" size={26} />
-              </div>
-              <h4 className="font-bold text-white text-lg mb-2">Peta Pengaduan</h4>
-              <p className="text-sm text-indigo-100">Lihat lokasi pengaduan di peta</p>
-            </button>
-          </div>
-        </div>
+    <button
+      onClick={() => navigate('/admin/map')}
+      className="bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 hover:shadow-2xl hover:from-indigo-700 hover:to-indigo-800 dark:hover:from-indigo-800 dark:hover:to-indigo-900 transition-all transform hover:-translate-y-1 active:scale-95 text-left"
+    >
+      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white bg-opacity-20 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+        <FiMap className="text-white" size={22} />
+      </div>
+      <h4 className="font-bold text-white text-base sm:text-lg mb-1 sm:mb-2">Peta Pengaduan</h4>
+      <p className="text-xs sm:text-sm text-indigo-100">Lihat lokasi pengaduan di peta</p>
+    </button>
+  </div>
+</div>
 
-        {/* Tips Admin */}
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 border-2 border-indigo-200 dark:border-indigo-800 rounded-2xl shadow-md p-6 md:p-8 transition-colors">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="text-3xl md:text-4xl">💡</div>
-            <h4 className="font-bold text-lg md:text-xl text-slate-800 dark:text-slate-100">
-              Tips untuk Admin
-            </h4>
-          </div>
+
+        {/* Tips Admin - Responsive */}
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 md:p-8 transition-colors">
+          <h4 className="font-bold text-base sm:text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-3 sm:mb-6">
+            Tips untuk Admin
+          </h4>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 bg-white dark:bg-slate-700 rounded-xl p-4 shadow-sm">
-              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiEye className="text-indigo-600 dark:text-indigo-400" size={18} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 sm:gap-3 bg-white dark:bg-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiEye className="text-indigo-600 dark:text-indigo-400" size={16} />
               </div>
               <div>
-                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-1">Monitor Pengaduan</p>
+                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-0.5 sm:mb-1">Monitor Pengaduan</p>
                 <p className="text-xs text-slate-600 dark:text-slate-400">Cek pengaduan baru secara berkala</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white dark:bg-slate-700 rounded-xl p-4 shadow-sm">
-              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiFilter className="text-indigo-600 dark:text-indigo-400" size={18} />
+            <div className="flex items-start gap-2 sm:gap-3 bg-white dark:bg-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiFilter className="text-indigo-600 dark:text-indigo-400" size={16} />
               </div>
               <div>
-                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-1">Update Status</p>
+                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-0.5 sm:mb-1">Update Status</p>
                 <p className="text-xs text-slate-600 dark:text-slate-400">Ubah status pengaduan yang sudah ditangani</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 bg-white dark:bg-slate-700 rounded-xl p-4 shadow-sm">
-              <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiBell className="text-indigo-600 dark:text-indigo-400" size={18} />
+            <div className="flex items-start gap-2 sm:gap-3 bg-white dark:bg-slate-700 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FiBell className="text-indigo-600 dark:text-indigo-400" size={16} />
               </div>
               <div>
-                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-1">Respons Cepat</p>
+                <p className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-0.5 sm:mb-1">Respons Cepat</p>
                 <p className="text-xs text-slate-600 dark:text-slate-400">Berikan tanggapan dalam 24 jam</p>
               </div>
             </div>
@@ -296,43 +307,43 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* ✅ Logout Confirmation Modal */}
+      {/* Logout Confirmation Modal - Responsive */}
       {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-scaleIn transition-colors">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 relative animate-scaleIn transition-colors">
             <button
               onClick={() => setShowLogoutModal(false)}
               disabled={loggingOut}
-              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FiX size={20} className="text-slate-600 dark:text-slate-300" />
+              <FiX size={18} className="text-slate-600 dark:text-slate-300" />
             </button>
 
             <div className="text-center">
-              <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FiLogOut className="text-red-600 dark:text-red-400" size={40} />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                <FiLogOut className="text-red-600 dark:text-red-400" size={32} />
               </div>
               
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 sm:mb-3">
                 Logout dari Admin Panel?
               </h3>
               
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mb-4 sm:mb-6">
                 Apakah Anda yakin ingin keluar dari akun admin <strong>{admin?.name}</strong>?
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowLogoutModal(false)}
                   disabled={loggingOut}
-                  className="flex-1 px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-6 py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmLogout}
                   disabled={loggingOut}
-                  className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loggingOut ? (
                     <>

@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categoriesAPI, complaintsAPI } from '../services/apiService';
 import Button from '../components/common/Button';
 import { useToast } from '../components/common/Toast';
-import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiUpload, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiTrash2, FiCamera, FiImage, FiRotateCw } from 'react-icons/fi';
 import LocationPicker from '../components/LocationPicker';
+import Webcam from 'react-webcam';
 
 const DRAFT_KEY = 'complaint_draft';
 
 function CreateComplaint() {
   const navigate = useNavigate();
   const toast = useToast();
+  const webcamRef = useRef(null);
+  
   const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     category_id: '',
@@ -28,25 +31,30 @@ function CreateComplaint() {
   const [showPriorityTooltip, setShowPriorityTooltip] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  
+  // Webcam state
+  const [showWebcam, setShowWebcam] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [facingMode, setFacingMode] = useState('user');
 
   // Navbar scroll state
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  // ✅ Load draft from localStorage on mount
   useEffect(() => {
     fetchCategories();
     loadDraft();
+    detectMobile();
   }, []);
 
-  // ✅ Auto-save draft whenever form changes
-  useEffect(() => {
-    if (draftLoaded) {
-      saveDraft();
-    }
-  }, [formData, coordinates, draftLoaded]);
+useEffect(() => {
+  if (draftLoaded) {
+    saveDraft();
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [formData, coordinates, draftLoaded]);
 
-  // Auto-hide navbar on scroll
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -65,6 +73,13 @@ function CreateComplaint() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  const detectMobile = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobileKeywords = ['android', 'iphone', 'ipad', 'ipod', 'mobile'];
+    const isMobileDevice = mobileKeywords.some(keyword => userAgent.includes(keyword));
+    setIsMobile(isMobileDevice);
+  };
+
   const fetchCategories = async () => {
     const response = await categoriesAPI.getList();
     if (response.success) {
@@ -72,7 +87,6 @@ function CreateComplaint() {
     }
   };
 
-  // ✅ Load draft from localStorage
   const loadDraft = () => {
     try {
       const savedDraft = localStorage.getItem(DRAFT_KEY);
@@ -87,8 +101,7 @@ function CreateComplaint() {
           setCoordinates(draft.coordinates);
         }
         
-        console.log('Draft loaded from localStorage');
-        toast.info('Draft sebelumnya telah dipulihkan');
+        console.log('✅ Draft loaded from localStorage');
       }
     } catch (error) {
       console.error('Error loading draft:', error);
@@ -97,7 +110,6 @@ function CreateComplaint() {
     }
   };
 
-  // ✅ Save draft to localStorage
   const saveDraft = () => {
     try {
       const draft = {
@@ -112,7 +124,6 @@ function CreateComplaint() {
     }
   };
 
-  // ✅ Clear draft after successful submit
   const clearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     console.log('✅ Draft cleared');
@@ -155,6 +166,61 @@ function CreateComplaint() {
     setPhotoPreviews([...photoPreviews, ...newPreviews]);
     
     toast.success(`✅ ${files.length} foto berhasil ditambahkan`);
+  };
+
+  const handleWebcamCapture = () => {
+    if (!webcamRef.current) {
+      toast.error('❌ Webcam tidak tersedia');
+      return;
+    }
+
+    try {
+      const imageSrc = webcamRef.current.getScreenshot();
+      
+      if (!imageSrc) {
+        toast.error('❌ Gagal mengambil foto');
+        return;
+      }
+
+      fetch(imageSrc)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], `photo_${Date.now()}.jpg`, { 
+            type: 'image/jpeg' 
+          });
+          
+          if (photos.length >= 5) {
+            toast.error('❌ Maksimal 5 foto');
+            return;
+          }
+
+          setPhotos([...photos, file]);
+          const preview = URL.createObjectURL(file);
+          setPhotoPreviews([...photoPreviews, preview]);
+          
+          setShowWebcam(false);
+          toast.success('✅ Foto berhasil diambil');
+        })
+        .catch(err => {
+          console.error('Webcam capture error:', err);
+          toast.error('❌ Gagal memproses foto');
+        });
+    } catch (error) {
+      console.error('Webcam error:', error);
+      toast.error('❌ Gagal mengambil foto dari webcam');
+    }
+  };
+
+  const handleCameraClick = () => {
+    if (isMobile) {
+      document.getElementById('camera-input-mobile').click();
+    } else {
+      setShowWebcam(true);
+    }
+  };
+
+  const switchCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
   const removePhoto = (index) => {
@@ -270,7 +336,6 @@ function CreateComplaint() {
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 md:p-8 transition-colors">
-          {/* Error Alert (Fallback jika toast tidak cukup) */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-300 dark:border-red-800 rounded-xl flex items-start gap-3 animate-fadeIn">
               <FiAlertCircle className="text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" size={20} />
@@ -278,10 +343,9 @@ function CreateComplaint() {
             </div>
           )}
 
-          {/* Info Box */}
           <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl transition-colors">
             <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>💡 Info:</strong> Data form akan tersimpan otomatis. Anda dapat melanjutkan mengisi form kapan saja.
+              <strong>Info:</strong> Data form akan tersimpan otomatis. Anda dapat melanjutkan mengisi form kapan saja.
             </p>
           </div>
 
@@ -449,27 +513,61 @@ function CreateComplaint() {
               )}
 
               {photos.length < 5 && (
-                <label className="flex flex-col items-center justify-center w-full px-4 py-12 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FiUpload className="text-indigo-600 dark:text-indigo-400" size={28} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCameraClick}
+                    className="flex flex-col items-center justify-center px-4 py-8 border-2 border-dashed border-indigo-300 dark:border-indigo-600 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition group"
+                  >
+                    <div className="text-center">
+                      <div className="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <FiCamera className="text-indigo-600 dark:text-indigo-400" size={24} />
+                      </div>
+                      <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 mb-1">
+                        Ambil Foto
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {isMobile ? 'Buka kamera' : 'Buka webcam'}
+                      </p>
                     </div>
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Klik untuk upload foto
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      PNG, JPG maksimal 5MB · Maksimal 5 foto
-                    </p>
-                  </div>
+                  </button>
+
                   <input
+                    id="camera-input-mobile"
                     type="file"
                     accept="image/*"
+                    capture="environment"
                     multiple
                     onChange={handlePhotoChange}
                     className="hidden"
                   />
-                </label>
+
+                  <label className="flex flex-col items-center justify-center px-4 py-8 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition group">
+                    <div className="text-center">
+                      <div className="w-14 h-14 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <FiImage className="text-slate-600 dark:text-slate-400" size={24} />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Dari Galeri
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Pilih foto
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
               )}
+              
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 text-center">
+                PNG, JPG maksimal 5MB · Maksimal 5 foto
+              </p>
             </div>
 
             {/* Prioritas */}
@@ -509,7 +607,6 @@ function CreateComplaint() {
               </select>
             </div>
 
-            {/* Submit Button */}
             <div className="pt-4">
               <Button
                 type="submit"
@@ -524,6 +621,83 @@ function CreateComplaint() {
           </form>
         </div>
       </div>
+
+      {/* ✅ WEBCAM MODAL - BEST UI */}
+      {showWebcam && (
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
+          <div className="w-full max-w-2xl bg-slate-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn">
+            {/* Header */}
+            <div className="bg-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+              <h3 className="text-white font-semibold text-base sm:text-lg">Ambil Foto</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={switchCamera}
+                  className="w-9 h-9 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-lg transition text-white"
+                  title="Ganti kamera"
+                >
+                  <FiRotateCw size={18} />
+                </button>
+                <button
+                  onClick={() => setShowWebcam(false)}
+                  className="w-9 h-9 flex items-center justify-center bg-slate-700 hover:bg-slate-600 rounded-lg transition text-white"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Camera Preview */}
+            <div className="relative bg-black" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                videoConstraints={{
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                  facingMode: facingMode
+                }}
+                className="w-full h-full object-cover"
+                onUserMediaError={(err) => {
+                  console.error('Webcam error:', err);
+                  toast.error('❌ Tidak dapat mengakses webcam');
+                  setShowWebcam(false);
+                }}
+              />
+              
+              {/* Frame Overlay */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-4 sm:inset-8 border-2 border-white/20 rounded-lg"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/50 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="bg-slate-800 px-4 sm:px-6 py-4 flex justify-center gap-2 sm:gap-3">
+              <button
+                onClick={() => setShowWebcam(false)}
+                className="px-5 sm:px-6 py-2.5 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleWebcamCapture}
+                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2 shadow-lg"
+              >
+                <FiCamera size={18} />
+                Ambil Foto
+              </button>
+            </div>
+
+            {/* Info */}
+            <div className="bg-slate-800 px-4 sm:px-6 pb-3 pt-1">
+              <p className="text-xs text-slate-400 text-center">
+                Pastikan pencahayaan cukup untuk hasil foto yang baik
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Modal */}
       {showConfirmModal && (
