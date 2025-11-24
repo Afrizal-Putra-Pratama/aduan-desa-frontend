@@ -53,6 +53,15 @@ function AdminComplaints() {
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
+  // ✅ Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     fetchComplaints();
   }, [currentPage, itemsPerPage, sortOrder]);
@@ -116,8 +125,23 @@ function AdminComplaints() {
     setCurrentPage(1);
   };
 
+  // ✅ UPDATED: Handle filter change with date validation
   const handleFilterChange = (field, value) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    if (field === 'date_from') {
+      // If tanggal mulai changes, clear tanggal akhir if it's before new start date
+      setFilters(prev => {
+        const newFilters = { ...prev, [field]: value };
+        
+        // Clear date_to if it's less than new date_from
+        if (prev.date_to && value && prev.date_to < value) {
+          newFilters.date_to = '';
+        }
+        
+        return newFilters;
+      });
+    } else {
+      setFilters(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleApplyFilters = (e) => {
@@ -190,6 +214,7 @@ function AdminComplaints() {
 
   const activeFilterCount = Object.values(filters).filter(v => v).length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const todayDate = getTodayDate();
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
@@ -268,6 +293,7 @@ function AdminComplaints() {
           </button>
         </div>
 
+        {/* ✅ UPDATED FILTER SECTION */}
         {showFilters && (
           <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 mb-6 transition-colors">
             <div className="flex items-center gap-3 mb-6">
@@ -317,19 +343,48 @@ function AdminComplaints() {
                   </select>
                 </div>
 
-                <FilterInput
-                  label="Tanggal Mulai"
-                  type="date"
-                  value={filters.date_from}
-                  onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                />
+                {/* ✅ TANGGAL MULAI - Max: Today */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                    Tanggal Mulai
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.date_from}
+                    onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                    max={todayDate}
+                    className="w-full px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Maksimal: Hari ini ({new Date(todayDate).toLocaleDateString('id-ID')})
+                  </p>
+                </div>
 
-                <FilterInput
-                  label="Tanggal Akhir"
-                  type="date"
-                  value={filters.date_to}
-                  onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                />
+                {/* ✅ TANGGAL AKHIR - Min: date_from, Max: Today */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
+                    Tanggal Akhir
+                  </label>
+                  <input
+                    type="date"
+                    value={filters.date_to}
+                    onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                    min={filters.date_from || undefined}
+                    max={todayDate}
+                    disabled={!filters.date_from}
+                    className="w-full px-4 py-2.5 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {filters.date_from ? (
+                      <>
+                        Minimal: {new Date(filters.date_from).toLocaleDateString('id-ID')} | 
+                        Maksimal: Hari ini
+                      </>
+                    ) : (
+                      'Pilih tanggal mulai terlebih dahulu'
+                    )}
+                  </p>
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
