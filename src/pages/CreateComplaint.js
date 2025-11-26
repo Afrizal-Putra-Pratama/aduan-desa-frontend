@@ -7,7 +7,9 @@ import { FiArrowLeft, FiAlertCircle, FiCheckCircle, FiX, FiMapPin, FiTrash2, FiC
 import LocationPicker from '../components/LocationPicker';
 import Webcam from 'react-webcam';
 
+
 const DRAFT_KEY = 'complaint_draft';
+
 
 function CreateComplaint() {
   const navigate = useNavigate();
@@ -32,14 +34,21 @@ function CreateComplaint() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
   
+  // 🆕 STATE UNTUK DUPLICATE DETECTION
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [similarComplaints, setSimilarComplaints] = useState([]);
+  const [checkingDuplicate, setCheckingDuplicate] = useState(false);
+  
   // Webcam state
   const [showWebcam, setShowWebcam] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [facingMode, setFacingMode] = useState('user');
 
+
   // Navbar scroll state
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
 
   useEffect(() => {
     fetchCategories();
@@ -47,12 +56,14 @@ function CreateComplaint() {
     detectMobile();
   }, []);
 
-useEffect(() => {
-  if (draftLoaded) {
-    saveDraft();
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [formData, coordinates, draftLoaded]);
+
+  useEffect(() => {
+    if (draftLoaded) {
+      saveDraft();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, coordinates, draftLoaded]);
+
 
 
   useEffect(() => {
@@ -73,6 +84,7 @@ useEffect(() => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+
   const detectMobile = () => {
     const userAgent = navigator.userAgent.toLowerCase();
     const mobileKeywords = ['android', 'iphone', 'ipad', 'ipod', 'mobile'];
@@ -80,12 +92,14 @@ useEffect(() => {
     setIsMobile(isMobileDevice);
   };
 
+
   const fetchCategories = async () => {
     const response = await categoriesAPI.getList();
     if (response.success) {
       setCategories(response.data || response.categories || []);
     }
   };
+
 
   const loadDraft = () => {
     try {
@@ -110,6 +124,7 @@ useEffect(() => {
     }
   };
 
+
   const saveDraft = () => {
     try {
       const draft = {
@@ -124,19 +139,23 @@ useEffect(() => {
     }
   };
 
+
   const clearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     console.log('✅ Draft cleared');
   };
 
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
 
   const handleLocationSelect = (position) => {
     console.log('📍 Location selected:', position);
     setCoordinates(position);
   };
+
 
   const handleResetCoordinates = () => {
     console.log('🗑️ Resetting coordinates');
@@ -144,6 +163,7 @@ useEffect(() => {
     setShowMap(false);
     setTimeout(() => setShowMap(true), 100);
   };
+
 
   const handlePhotoChange = (e) => {
     const files = Array.from(e.target.files);
@@ -153,12 +173,14 @@ useEffect(() => {
       return;
     }
 
+
     for (let file of files) {
       if (file.size > 5242880) {
         toast.error('❌ Ukuran foto maksimal 5MB');
         return;
       }
     }
+
 
     setPhotos([...photos, ...files]);
     
@@ -168,11 +190,13 @@ useEffect(() => {
     toast.success(`✅ ${files.length} foto berhasil ditambahkan`);
   };
 
+
   const handleWebcamCapture = () => {
     if (!webcamRef.current) {
       toast.error('❌ Webcam tidak tersedia');
       return;
     }
+
 
     try {
       const imageSrc = webcamRef.current.getScreenshot();
@@ -181,6 +205,7 @@ useEffect(() => {
         toast.error('❌ Gagal mengambil foto');
         return;
       }
+
 
       fetch(imageSrc)
         .then(res => res.blob())
@@ -193,6 +218,7 @@ useEffect(() => {
             toast.error('❌ Maksimal 5 foto');
             return;
           }
+
 
           setPhotos([...photos, file]);
           const preview = URL.createObjectURL(file);
@@ -211,6 +237,7 @@ useEffect(() => {
     }
   };
 
+
   const handleCameraClick = () => {
     if (isMobile) {
       document.getElementById('camera-input-mobile').click();
@@ -219,9 +246,11 @@ useEffect(() => {
     }
   };
 
+
   const switchCamera = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
+
 
   const removePhoto = (index) => {
     const newPhotos = photos.filter((_, i) => i !== index);
@@ -235,7 +264,9 @@ useEffect(() => {
     toast.info('🗑️ Foto dihapus');
   };
 
-  const handleFormSubmit = (e) => {
+
+  // 🆕 UPDATED: Handle form submit dengan duplicate check
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
@@ -245,13 +276,42 @@ useEffect(() => {
       return;
     }
     
-    setShowConfirmModal(true);
+    // 🔍 Check duplicate sebelum menampilkan confirm modal
+    setCheckingDuplicate(true);
+    
+    try {
+      const duplicateCheck = await complaintsAPI.checkDuplicate({
+        title: formData.title,
+        description: formData.description
+      });
+      
+      console.log('🔍 Duplicate check result:', duplicateCheck);
+      
+      if (duplicateCheck.success && duplicateCheck.isDuplicate) {
+        // Ditemukan pengaduan serupa - tampilkan warning
+        setSimilarComplaints(duplicateCheck.similar_complaints);
+        setShowDuplicateModal(true);
+        toast.info('⚠️ Ditemukan pengaduan serupa');
+      } else {
+        // Tidak ada duplikat - lanjut ke confirm
+        setShowConfirmModal(true);
+      }
+    } catch (error) {
+      console.error('Duplicate check error:', error);
+      // Jika check gagal, tetap izinkan submit
+      toast.warning('⚠️ Tidak dapat mengecek duplikat, melanjutkan...');
+      setShowConfirmModal(true);
+    } finally {
+      setCheckingDuplicate(false);
+    }
   };
+
 
   const handleConfirmSubmit = async () => {
     setShowConfirmModal(false);
     setLoading(true);
     setError('');
+
 
     try {
       const formDataToSend = new FormData();
@@ -270,11 +330,14 @@ useEffect(() => {
         formDataToSend.append('photos[]', photo);
       });
 
+
       console.log('📤 Submitting complaint via complaintsAPI...');
       
       const response = await complaintsAPI.create(formDataToSend);
 
+
       console.log('📥 Response:', response);
+
 
       if (response.success) {
         clearDraft();
@@ -293,10 +356,12 @@ useEffect(() => {
     }
   };
 
+
   const getCategoryName = () => {
     const cat = categories.find(c => c.id === parseInt(formData.category_id));
     return cat ? cat.name : '-';
   };
+
 
   const getPriorityLabel = () => {
     const labels = {
@@ -306,6 +371,7 @@ useEffect(() => {
     };
     return labels[formData.priority] || formData.priority;
   };
+
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
@@ -332,7 +398,9 @@ useEffect(() => {
         </div>
       </nav>
 
+
       <div className="h-16"></div>
+
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 md:p-8 transition-colors">
@@ -343,11 +411,13 @@ useEffect(() => {
             </div>
           )}
 
+
           <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl transition-colors">
             <p className="text-sm text-blue-800 dark:text-blue-200">
               <strong>Info:</strong> Data form akan tersimpan otomatis. Anda dapat melanjutkan mengisi form kapan saja.
             </p>
           </div>
+
 
           <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Kategori */}
@@ -377,6 +447,7 @@ useEffect(() => {
               </select>
             </div>
 
+
             {/* Judul */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
@@ -392,6 +463,7 @@ useEffect(() => {
                 className="w-full px-4 py-3 border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
+
 
             {/* Deskripsi */}
             <div>
@@ -409,6 +481,7 @@ useEffect(() => {
               ></textarea>
             </div>
 
+
             {/* Lokasi */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
@@ -424,6 +497,7 @@ useEffect(() => {
               />
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">Opsional - Alamat lengkap lokasi pengaduan</p>
             </div>
+
 
             {/* Map Section */}
             <div>
@@ -455,6 +529,7 @@ useEffect(() => {
                 </div>
               </div>
 
+
               {showMap && (
                 <div className="mt-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden relative z-0">
                   <LocationPicker 
@@ -464,6 +539,7 @@ useEffect(() => {
                   />
                 </div>
               )}
+
 
               {coordinates && (
                 <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-lg flex items-center justify-between">
@@ -484,6 +560,7 @@ useEffect(() => {
                 </div>
               )}
             </div>
+
 
             {/* Upload Foto */}
             <div>
@@ -512,6 +589,7 @@ useEffect(() => {
                 </div>
               )}
 
+
               {photos.length < 5 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
@@ -532,6 +610,7 @@ useEffect(() => {
                     </div>
                   </button>
 
+
                   <input
                     id="camera-input-mobile"
                     type="file"
@@ -541,6 +620,7 @@ useEffect(() => {
                     onChange={handlePhotoChange}
                     className="hidden"
                   />
+
 
                   <label className="flex flex-col items-center justify-center px-4 py-8 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl cursor-pointer hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition group">
                     <div className="text-center">
@@ -569,6 +649,7 @@ useEffect(() => {
                 PNG, JPG maksimal 5MB · Maksimal 5 foto
               </p>
             </div>
+
 
             {/* Prioritas */}
             <div>
@@ -607,26 +688,28 @@ useEffect(() => {
               </select>
             </div>
 
+
+            {/* 🆕 UPDATED: Submit button dengan loading state untuk duplicate check */}
             <div className="pt-4">
               <Button
                 type="submit"
                 variant="primary"
                 fullWidth
                 size="lg"
-                loading={loading}
+                loading={loading || checkingDuplicate}
               >
-                Kirim Pengaduan
+                {checkingDuplicate ? 'Memeriksa Duplikat...' : 'Kirim Pengaduan'}
               </Button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* ✅ WEBCAM MODAL - BEST UI */}
+
+      {/* ✅ WEBCAM MODAL */}
       {showWebcam && (
         <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
           <div className="w-full max-w-2xl bg-slate-900 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl animate-scaleIn">
-            {/* Header */}
             <div className="bg-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
               <h3 className="text-white font-semibold text-base sm:text-lg">Ambil Foto</h3>
               <div className="flex items-center gap-2">
@@ -646,7 +729,7 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Camera Preview */}
+
             <div className="relative bg-black" style={{ aspectRatio: '16/9', maxHeight: '65vh' }}>
               <Webcam
                 ref={webcamRef}
@@ -665,14 +748,13 @@ useEffect(() => {
                 }}
               />
               
-              {/* Frame Overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute inset-4 sm:inset-8 border-2 border-white/20 rounded-lg"></div>
                 <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/50 rounded-full"></div>
               </div>
             </div>
 
-            {/* Actions */}
+
             <div className="bg-slate-800 px-4 sm:px-6 py-4 flex justify-center gap-2 sm:gap-3">
               <button
                 onClick={() => setShowWebcam(false)}
@@ -689,7 +771,7 @@ useEffect(() => {
               </button>
             </div>
 
-            {/* Info */}
+
             <div className="bg-slate-800 px-4 sm:px-6 pb-3 pt-1">
               <p className="text-xs text-slate-400 text-center">
                 Pastikan pencahayaan cukup untuk hasil foto yang baik
@@ -698,6 +780,109 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+
+      {/* 🆕 DUPLICATE WARNING MODAL */}
+      {showDuplicateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full my-8 relative animate-scaleIn transition-colors max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowDuplicateModal(false)}
+              className="absolute top-5 right-5 w-9 h-9 flex items-center justify-center bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors z-10"
+            >
+              <FiX size={20} className="text-slate-600 dark:text-slate-300" />
+            </button>
+
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FiAlertCircle className="text-orange-600 dark:text-orange-400" size={32} />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  Pengaduan Serupa Ditemukan
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Sistem mendeteksi ada {similarComplaints.length} pengaduan yang mirip dengan pengaduan Anda
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-6">
+                {similarComplaints.map((complaint, index) => (
+                  <div 
+                    key={complaint.id}
+                    className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-orange-300 dark:hover:border-orange-700 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 flex-1">
+                        {complaint.title}
+                      </h4>
+                      <span className="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-bold rounded-full flex-shrink-0">
+                        {complaint.similarity}% mirip
+                      </span>
+                    </div>
+                    
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                      {complaint.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded capitalize">
+                          {complaint.status}
+                        </span>
+                        <span>{new Date(complaint.created_at).toLocaleDateString('id-ID')}</span>
+                        {complaint.is_own && (
+                          <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+                            Pengaduan Anda
+                          </span>
+                        )}
+                      </div>
+                      
+                      <button
+                        onClick={() => {
+                          navigate(`/complaints/${complaint.id}`);
+                        }}
+                        className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold"
+                      >
+                        Lihat Detail →
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl mb-6">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Tips:</strong> Jika pengaduan Anda sama dengan salah satu di atas, 
+                  sebaiknya batalkan dan pantau pengaduan yang sudah ada. 
+                  Jika berbeda, Anda tetap bisa melanjutkan pengajuan.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowDuplicateModal(false)}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  Batalkan
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowDuplicateModal(false);
+                    setShowConfirmModal(true);
+                  }}
+                  variant="primary"
+                  className="flex-1"
+                >
+                  Tetap Lanjutkan
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Confirm Modal */}
       {showConfirmModal && (
@@ -710,6 +895,7 @@ useEffect(() => {
               <FiX size={20} className="text-slate-600 dark:text-slate-300" />
             </button>
 
+
             <div className="p-8">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -719,21 +905,25 @@ useEffect(() => {
                 <p className="text-slate-600 dark:text-slate-400">Pastikan data sudah benar sebelum mengirim</p>
               </div>
 
+
               <div className="space-y-4 max-h-96 overflow-y-auto">
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Kategori</p>
                   <p className="text-base font-bold text-slate-800 dark:text-slate-100">{getCategoryName()}</p>
                 </div>
 
+
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Judul</p>
                   <p className="text-base font-bold text-slate-800 dark:text-slate-100">{formData.title}</p>
                 </div>
 
+
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Deskripsi</p>
                   <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{formData.description}</p>
                 </div>
+
 
                 {formData.location && (
                   <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
@@ -742,6 +932,7 @@ useEffect(() => {
                   </div>
                 )}
 
+
                 {coordinates && (
                   <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Koordinat</p>
@@ -749,10 +940,12 @@ useEffect(() => {
                   </div>
                 )}
 
+
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
                   <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Tingkat Urgensi</p>
                   <p className="text-base font-bold text-slate-800 dark:text-slate-100">{getPriorityLabel()}</p>
                 </div>
+
 
                 {photoPreviews.length > 0 && (
                   <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
@@ -770,6 +963,7 @@ useEffect(() => {
                   </div>
                 )}
               </div>
+
 
               <div className="mt-6 flex gap-3">
                 <Button
@@ -793,6 +987,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+
 
       {/* Priority Tooltip Modal */}
       {showPriorityTooltip && (
@@ -825,6 +1020,7 @@ useEffect(() => {
                 </div>
               </div>
 
+
               <Button
                 onClick={() => setShowPriorityTooltip(false)}
                 variant="primary"
@@ -840,5 +1036,6 @@ useEffect(() => {
     </div>
   );
 }
+
 
 export default CreateComplaint;

@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../services/adminAPI';
-import { FiArrowLeft, FiPhone, FiMapPin, FiCalendar, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiArrowLeft, FiPhone, FiMapPin, FiCalendar, FiTrash2, FiChevronLeft, FiChevronRight, FiX } from 'react-icons/fi';
+import Button from '../../components/common/Button';
 
 function AdminUserDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userDetail, setUserDetail] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [error, setError] = useState('');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-useEffect(() => {
-  fetchUserDetail();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [id]);
-
+  useEffect(() => {
+    fetchUserDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const fetchUserDetail = async () => {
     setLoading(true);
@@ -31,16 +33,23 @@ useEffect(() => {
     setLoading(false);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Yakin ingin menghapus user "${userDetail.user.name}"?\n\nSemua pengaduan user ini juga akan dihapus!`)) {
-      return;
-    }
-    const response = await adminAPI.deleteUser(id);
-    if (response.success) {
-      alert('User berhasil dihapus!');
-      navigate('/admin/users');
-    } else {
-      alert('Gagal menghapus user: ' + response.message);
+  // Ganti alert confirm dengan modal, ini fungsi panggil saat konfirmasi hapus
+  const handleDeleteConfirmed = async () => {
+    setShowDeleteModal(false);
+    setLoading(true);
+    setError('');
+    try {
+      const response = await adminAPI.deleteUser(id);
+      if (response.success) {
+        alert('User berhasil dihapus!');
+        navigate('/admin/users');
+      } else {
+        setError('Gagal menghapus user: ' + response.message);
+      }
+    } catch (err) {
+      setError('Gagal menghapus user, silakan coba lagi.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,7 +187,7 @@ useEffect(() => {
               {/* Action Buttons */}
               <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteModal(true)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition font-semibold shadow-md"
                 >
                   <FiTrash2 />
@@ -282,6 +291,39 @@ useEffect(() => {
           </div>
         </div>
       </div>
+
+      {/* Modal Konfirmasi Hapus */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute top-3 right-3 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition"
+              aria-label="Close modal"
+            >
+              <FiX size={24} />
+            </button>
+            <h2 className="text-lg font-bold mb-4 text-slate-800 dark:text-slate-100">
+              Konfirmasi Hapus User
+            </h2>
+            <p className="mb-6 text-slate-700 dark:text-slate-300">
+              Yakin ingin menghapus user <strong>"{userDetail.user.name}"</strong>? <br />
+              Semua pengaduan user ini juga akan dihapus!
+            </p>
+            {error && (
+              <p className="mb-4 text-sm text-red-600 dark:text-red-400 font-semibold">{error}</p>
+            )}
+            <div className="flex gap-4 justify-end">
+              <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                Batal
+              </Button>
+              <Button variant="danger" onClick={handleDeleteConfirmed} loading={loading}>
+                Hapus
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

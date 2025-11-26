@@ -1,14 +1,17 @@
 import axios from 'axios';
 
+
 // API Base URL
 const API_BASE_URL = 'https://econometric-unvicariously-anjelica.ngrok-free.dev/aduan-desa/api';
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
+
 
 // Add check
 if (!API_BASE_URL) {
   console.error('❌ REACT_APP_API_URL not set!');
   console.error('Using fallback: http://localhost/aduan-desa/api');
 }
+
 
 // Helper function untuk request dengan token
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
@@ -32,6 +35,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       timeout: 10000,
     };
 
+
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
       console.log('✅ Token added to headers');
@@ -39,9 +43,11 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
       console.warn('⚠️ No token found in localStorage');
     }
 
+
     if (data && (method === 'POST' || method === 'PUT')) {
       config.data = data;
     }
+
 
     console.log('📤 Request config:', config);
     
@@ -66,6 +72,7 @@ const apiRequest = async (endpoint, method = 'GET', data = null) => {
   }
 };
 
+
 // =============================
 // Auth API
 // =============================
@@ -79,6 +86,7 @@ export const authAPI = {
   login: async (credentials) => {
     return await apiRequest('auth/login.php', 'POST', credentials);
   },
+
 
   // 🆕 REGISTER DIRECT (TANPA OTP) - DIPAKAI
   registerDirect: async (data) => {
@@ -110,6 +118,7 @@ export const authAPI = {
     }
   },
 
+
   // 🆕 REGISTER STEP 1: Send OTP (FOR FUTURE USE)
   registerStep1: async (data) => {
     console.log('🔵 Register Step 1 - Sending OTP');
@@ -140,6 +149,7 @@ export const authAPI = {
       };
     }
   },
+
 
   // 🆕 REGISTER STEP 2: Verify OTP (FOR FUTURE USE)
   registerStep2: async (data) => {
@@ -173,6 +183,7 @@ export const authAPI = {
     }
   },
 
+
   // 🆕 LOGIN STEP 1: Request OTP (Username + Phone) - UPDATED
   loginRequestOTP: async (username, phone) => {
     console.log('🔵 Login - Requesting OTP for:', username, phone);
@@ -202,6 +213,7 @@ export const authAPI = {
       };
     }
   },
+
 
   // 🆕 LOGIN STEP 2: Verify OTP & Login (Username + Phone + OTP) - UPDATED
   loginVerifyOTP: async (username, phone, otp) => {
@@ -235,6 +247,7 @@ export const authAPI = {
   }
 };
 
+
 // =============================
 // Categories API
 // =============================
@@ -243,6 +256,7 @@ export const categoriesAPI = {
     return await apiRequest('categories/list.php', 'GET');
   }
 };
+
 
 // =============================
 // Complaints API
@@ -283,6 +297,37 @@ export const complaintsAPI = {
     }
   },
 
+  // 🆕 CHECK DUPLICATE - FUNGSI BARU
+  checkDuplicate: async (data) => {
+    console.log('🔍 Checking duplicate for:', data);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_BASE_URL}/complaints/check-duplicate.php`,
+        {
+          title: data.title,
+          description: data.description
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'ngrok-skip-browser-warning': '69420'
+          },
+          timeout: 10000
+        }
+      );
+      console.log('✅ Duplicate check result:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Check duplicate error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Gagal mengecek duplikat'
+      };
+    }
+  },
+
   getPublicList: async (queryString = '') => {
     try {
       const endpoint = queryString 
@@ -315,6 +360,7 @@ export const complaintsAPI = {
   },
 };
 
+
 // =============================
 // Profile API
 // =============================
@@ -323,6 +369,7 @@ export const profileAPI = {
   update: async (data) => await apiRequest('profile/update.php', 'POST', data),
   changePassword: async (data) => await apiRequest('profile/change-password.php', 'POST', data)
 };
+
 
 // =============================
 // Notifications API
@@ -346,6 +393,7 @@ export const notificationsAPI = {
     }
   },
 
+
   markAsRead: async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
@@ -365,6 +413,7 @@ export const notificationsAPI = {
     }
   },
 
+
   markAllAsRead: async () => {
     try {
       const token = localStorage.getItem('token');
@@ -382,6 +431,7 @@ export const notificationsAPI = {
       return { success: false, message: error.message };
     }
   },
+
 
   deleteNotification: async (notificationId) => {
     try {
@@ -402,6 +452,7 @@ export const notificationsAPI = {
     }
   },
 
+
   deleteAllRead: async () => {
     try {
       const token = localStorage.getItem('token');
@@ -420,6 +471,7 @@ export const notificationsAPI = {
     }
   }
 };
+
 
 // =============================
 // Update complaint
@@ -446,6 +498,7 @@ export const updateComplaint = async (id, complaintData) => {
   }
 };
 
+
 // =============================
 // Delete complaint
 // =============================
@@ -468,6 +521,7 @@ export const deleteComplaint = async (id) => {
     return { success: false, message: error.message };
   }
 };
+
 
 // =============================
 // Dashboard API
