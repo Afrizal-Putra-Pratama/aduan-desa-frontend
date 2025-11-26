@@ -6,11 +6,7 @@ const API_BASE_URL = 'https://203.175.11.58/api';
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
 
-// Add check
-if (!API_BASE_URL) {
-  console.error('❌ REACT_APP_API_URL not set!');
-  console.error('Using fallback: http://localhost/aduan-desa/api');
-}
+
 
 
 // Helper function untuk request dengan token
