@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 // API Base URL
-const API_BASE_URL = 'http://203.175.11.58/api';
+const API_BASE_URL = 'https://203.175.11.58/api';
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
 
