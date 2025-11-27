@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://econometric-unvicariously-anjelica.ngrok-free.dev';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost/aduan-desa/api';
+
 
 export const adminAPI = {
   // Login admin
@@ -13,10 +15,6 @@ export const adminAPI = {
         email: email,
         password: password
       }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': '69420' // ✅ NGROK BYPASS
-        }
       });
       
       console.log('✅ Admin login response:', res.data);

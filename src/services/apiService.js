@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 // API Base URL
-const API_BASE_URL = 'https://econometric-unvicariously-anjelica.ngrok-free.dev';
+const API_BASE_URL = 'http://localhost/aduan-desa/api';
 console.log('🔧 API_BASE_URL:', API_BASE_URL);
 
 
@@ -13,7 +13,7 @@ console.log('🔧 API_BASE_URL:', API_BASE_URL);
 const apiRequest = async (endpoint, method = 'GET', data = null) => {
   try {
     const token = localStorage.getItem('token');
-    
+    console.log(token)
     console.log('🔵 API Request:', {
       endpoint,
       method,

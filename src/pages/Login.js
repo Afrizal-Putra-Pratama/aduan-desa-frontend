@@ -140,7 +140,7 @@ function Login() {
     const phoneError = validatePhone(phone);
     if (phoneError) {
       setError(phoneError);
-      toast.error('❌ ' + phoneError);
+      toast.error('❌ phone error ' + phoneError);
       return;
     }
 
@@ -157,7 +157,7 @@ function Login() {
         toast.success('Kode OTP berhasil dikirim ke WhatsApp Anda');
       } else {
         setError(response.message);
-        toast.error('❌ ' + response.message);
+        toast.error('❌ otp error' + response.message);
       }
     } catch (error) {
       setError('Gagal mengirim OTP. Silakan coba lagi.');
@@ -168,80 +168,100 @@ function Login() {
   };
 
   // Login
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (!username.trim()) {
-      setError('Username wajib diisi');
-      toast.error('Username wajib diisi');
-      return;
-    }
+  if (!username.trim()) {
+    setError('Username wajib diisi');
+    toast.error('Username wajib diisi');
+    return;
+  }
 
-    if (!phone.trim()) {
-      setError('Nomor HP wajib diisi');
-      toast.error('Nomor HP wajib diisi');
-      return;
-    }
+  if (!phone.trim()) {
+    setError('Nomor HP wajib diisi');
+    toast.error('Nomor HP wajib diisi');
+    return;
+  }
 
-    const phoneError = validatePhone(phone);
-    if (phoneError) {
-      setError(phoneError);
-      toast.error('❌ ' + phoneError);
-      return;
-    }
+  const phoneError = validatePhone(phone);
+  if (phoneError) {
+    setError(phoneError);
+    toast.error('❌ phone' + phoneError);
+    return;
+  }
 
-    if (!otp.trim() || otp.length !== 6) {
-      setError('Kode OTP harus 6 digit');
-      toast.error('Kode OTP harus 6 digit');
-      return;
-    }
+  if (!otp.trim() || otp.length !== 6) {
+    setError('Kode OTP harus 6 digit');
+    toast.error('Kode OTP harus 6 digit');
+    return;
+  }
 
-    setLoadingLogin(true);
+  setLoadingLogin(true);
 
-    try {
-      const response = await authAPI.loginVerifyOTP(username, phone, otp);
+  try {
+    const response = await authAPI.loginVerifyOTP(username, phone, otp);
 
-      if (response.success) {
-        // Save credentials if remember me checked
-        if (rememberMe) {
-          localStorage.setItem('remembered_username', username);
-          localStorage.setItem('remembered_phone', phone);
-          console.log('✅ Credentials saved');
-        } else {
-          localStorage.removeItem('remembered_username');
-          localStorage.removeItem('remembered_phone');
-          console.log('🗑️ Credentials removed');
-        }
-
-        const userData = {
-          ...response.user,
-          id: parseInt(response.user.id)
-        };
-        
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        toast.success('Login berhasil! Selamat datang ' + userData.name);
-        
-        login(userData, response.token);
-        
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+    if (response.success) {
+      // Save credentials if remember me checked
+      if (rememberMe) {
+        localStorage.setItem('remembered_username', username);
+        localStorage.setItem('remembered_phone', phone);
+        console.log('✅ Credentials saved');
       } else {
-        setError(response.message);
-        toast.error('❌ ' + response.message);
-        setOtp('');
+        localStorage.removeItem('remembered_username');
+        localStorage.removeItem('remembered_phone');
+        console.log('🗑️ Credentials removed');
       }
-    } catch (error) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
-      toast.error('Terjadi kesalahan. Silakan coba lagi.');
+
+      const userData = {
+        ...response.user,
+        id: parseInt(response.user.id)
+      };
+      
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      // ✅ DEBUG JWT TOKEN DI CONSOLE BROWSER
+      console.log('🔑 JWT Token:', response.token);
+      console.log('📦 Token Length:', response.token.length);
+      
+      // Decode payload JWT untuk debug
+      try {
+        const payloadBase64 = response.token.split('.')[1];
+        const payloadJson = atob(payloadBase64);
+        const payload = JSON.parse(payloadJson);
+        console.log('📋 JWT Payload:', payload);
+        console.log('👤 User ID:', payload.data.id);
+        console.log('👤 Username:', payload.data.username);
+        console.log('👤 Name:', payload.data.name);
+        console.log('⏰ Issued At:', new Date(payload.iat * 1000).toLocaleString());
+        console.log('⏰ Expires At:', new Date(payload.exp * 1000).toLocaleString());
+      } catch (e) {
+        console.error('❌ Error decoding JWT:', e);
+      }
+      
+      toast.success('Login berhasil! Selamat datang ' + userData.name);
+      
+      login(userData, response.token);
+      
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } else {
+      setError(response.message);
+      toast.error('❌ test ' + response.message);
       setOtp('');
-    } finally {
-      setLoadingLogin(false);
     }
-  };
+  } catch (error) {
+    setError('Terjadi kesalahan. Silakan coba lagi.');
+    toast.error('Terjadi kesalahan. Silakan coba lagi.');
+    setOtp('');
+  } finally {
+    setLoadingLogin(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 flex items-center justify-center p-4 transition-colors">
